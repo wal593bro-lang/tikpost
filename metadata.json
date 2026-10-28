@@ -1,0 +1,6 @@
+{
+  "name": "PostFlow — Facebook Automation & Scheduler",
+  "description": "Enterprise-grade Facebook Page automation, human-safe scheduled publishing, and video pipeline management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

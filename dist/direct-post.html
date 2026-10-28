@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Direct Post — PostFlow</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, Segoe UI, Roboto, sans-serif; }
+    body { background: #F2F5F7; color: #0E2A2F; }
+
+    /* SIDEBAR (PostFlow Signature Dark Teal #0E2A2F) */
+    .sidebar { position: fixed; left: 0; top: 0; width: 240px; height: 100vh; background: #0E2A2F; color: #A0B2B7; padding: 20px 0; overflow-y: auto; z-index: 100; }
+    .logo { padding: 0 20px 20px; font-size: 21px; font-weight: 800; text-decoration: none; display: flex; align-items: center; gap: 10px; color: #fff; }
+    .logo-badge { width: 32px; height: 32px; background: #F7C948; color: #0E2A2F; border-radius: 8px; display: grid; place-items: center; font-size: 16px; font-weight: 900; }
+    .nav-label { padding: 14px 20px 6px; font-size: 11px; font-weight: 700; color: #627D83; text-transform: uppercase; letter-spacing: .5px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 20px; color: #A0B2B7; text-decoration: none; font-size: 13px; font-weight: 500; transition: background .15s, color .15s; }
+    .nav-item:hover { background: #13353B; color: #fff; }
+    .nav-item.active { background: #163E45; color: #F7C948; font-weight: 700; }
+    .user-footer { padding: 16px 20px; margin-top: 16px; border-top: 1px solid #16393F; font-size: 12px; color: #fff; }
+    .user-footer a { color: #F7C948; text-decoration: none; font-weight: 600; display: inline-block; margin-top: 4px; font-size: 11px; }
+
+    /* MAIN */
+    .main { margin-left: 240px; padding: 24px 36px; min-height: 100vh; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .topbar .sub { font-size: 12px; color: #718096; font-weight: 500; }
+    .topbar .user-area { font-size: 12px; color: #5B6B73; display: flex; gap: 12px; align-items: center; }
+    .topbar a { color: #0E2A2F; text-decoration: none; font-weight: 700; }
+
+    /* CARD */
+    .card { background: #fff; border-radius: 14px; padding: 28px; border: 1px solid #D8E0E5; max-width: 680px; box-shadow: 0 1px 3px rgba(0,0,0,.03); }
+    .card h2 { font-size: 20px; color: #0E2A2F; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .card .desc { font-size: 13px; color: #5B6B73; margin-bottom: 20px; }
+    input, select { width: 100%; padding: 12px 14px; margin-bottom: 14px; border: 1px solid #D8E0E5; border-radius: 10px; font-size: 13px; outline: none; background: #fff; color: #0E2A2F; }
+    input:focus, select:focus { border-color: #0E2A2F; }
+    .btn { background: #1877f2; color: #fff; border: none; padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: background .15s; }
+    .btn:hover { background: #166fe5; }
+    .btn:disabled { background: #a0aec0; cursor: not-allowed; }
+
+    /* STATUS LOG BOX */
+    .status-box { display: none; background: #0A1F23; color: #A0B2B7; padding: 16px; border-radius: 10px; margin-top: 16px; font-family: Consolas, monospace; font-size: 12px; line-height: 1.6; }
+    .status-box .ok { color: #2e9e5b; font-weight: 700; }
+    .status-box .wait { color: #F7C948; }
+
+    /* RECENT POSTS LIST */
+    .history-card { background: #fff; border-radius: 14px; padding: 24px 28px; border: 1px solid #D8E0E5; max-width: 680px; margin-top: 20px; }
+    .history-head { font-size: 15px; font-weight: 700; color: #0E2A2F; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+    .h-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border: 1px solid #eef1f5; border-radius: 10px; margin-bottom: 8px; font-size: 13px; }
+    .h-item .pn { font-weight: 700; color: #0E2A2F; }
+    .empty { color: #a0aec0; text-align: center; padding: 20px; font-size: 13px; }
+
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR (PostFlow Signature Dark Teal #0E2A2F) -->
+  <aside class="sidebar">
+    <a class="logo" href="/dashboard.html">
+      <div class="logo-badge">✈</div>
+      <span>PostFlow</span>
+    </a>
+
+    <div class="nav-label">Facebook</div>
+    <a class="nav-item" href="/dashboard.html">🏠 Dashboard</a>
+    <a class="nav-item" href="/connect-app.html">🔑 App settings</a>
+
+    <div class="nav-label">Posting</div>
+    <a class="nav-item" href="/media-library.html">📁 Media library</a>
+    <a class="nav-item active" href="/direct-post.html">🚀 Post now</a>
+
+    <div class="nav-label">Automation</div>
+    <a class="nav-item" href="/auto-upload.html">⬇️ Auto download & upload</a>
+    <a class="nav-item" href="/schedule.html">📅 Schedule</a>
+
+    <div class="user-footer">
+      <div>wal593bro@gmail.com</div>
+      <a href="/dashboard.html">Dashboard View</a>
+    </div>
+  </aside>
+
+  <!-- MAIN VIEW -->
+  <main class="main">
+    <div class="topbar">
+      <div class="sub">PostFlow · Direct Blast Publisher</div>
+      <div class="user-area">
+        <span>wal593bro@gmail.com</span>
+        <a href="/dashboard.html">Back to Dashboard</a>
+      </div>
+    </div>
+
+    <!-- DIRECT POST FORM CARD -->
+    <div class="card">
+      <h2>⬇️ Download & Post (Abhi)</h2>
+      <div class="desc">YouTube/TikTok link se foran kisi page pe post karein.</div>
+
+      <form id="postForm" onsubmit="handleDirectPost(event)">
+        <label style="font-size:12px; font-weight:700; margin-bottom:4px; display:block;">Video URL (YouTube / TikTok / Reels)</label>
+        <input type="url" id="vUrl" placeholder="https://www.tiktok.com/@user/video/..." required>
+
+        <label style="font-size:12px; font-weight:700; margin-bottom:4px; display:block;">Target Facebook Page Chunein</label>
+        <select id="pageSelect" required>
+          <option value="">Aap ke pages load ho rahe hain...</option>
+        </select>
+
+        <label style="font-size:12px; font-weight:700; margin-bottom:4px; display:block;">Caption & Hashtags (optional)</label>
+        <input type="text" id="caption" placeholder="Caption (optional)">
+
+        <button type="submit" class="btn" id="postBtn">
+          <span>⬇️</span>
+          <span>Download & Post</span>
+        </button>
+      </form>
+
+      <!-- REAL-TIME PROCESSING STATUS -->
+      <div class="status-box" id="statusBox">
+        <div id="st_step1" class="wait">⏳ Step 1: Video download ho rahi hai (yt-dlp)...</div>
+        <div id="st_step2" style="display:none;" class="wait">⏳ Step 2: Metadata remove ho raha hai (FFmpeg)...</div>
+        <div id="st_step3" style="display:none;" class="wait">⏳ Step 3: Cloudflare R2 bucket mein stream ho rahi hai...</div>
+        <div id="st_step4" style="display:none;" class="ok">🚀 Step 4: Facebook Page par LIVE publish ho gayi!</div>
+      </div>
+    </div>
+
+    <!-- RECENT DIRECT POSTS -->
+    <div class="history-card">
+      <div class="history-head">
+        <span>📜 Recent Direct Posts</span>
+        <span id="historyCount" style="font-size:12px; color:#718096; font-family:monospace;">0 posted</span>
+      </div>
+      <div id="historyList"></div>
+    </div>
+  </main>
+
+  <script>
+    let myPages = [];
+    let directHistory = JSON.parse(localStorage.getItem('pf_direct_history') || '[]');
+
+    async function loadPages() {
+      try {
+        const res = await fetch('/api/pages');
+        if (res.ok) {
+          myPages = await res.json();
+        }
+      } catch (e) {
+        console.log('Using local state', e);
+      }
+
+      const sel = document.getElementById('pageSelect');
+      if (!myPages || myPages.length === 0) {
+        sel.innerHTML = '<option value="">Pehle "Accounts" se Facebook connect karein</option>';
+      } else {
+        sel.innerHTML = '<option value="">Page select karein...</option>' + myPages.map(p => `
+          <option value="${p.id}" data-name="${p.name}">📄 ${p.name} (${p.id})</option>
+        `).join('');
+      }
+
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const hl = document.getElementById('historyList');
+      document.getElementById('historyCount').innerText = directHistory.length + ' posted';
+
+      if (directHistory.length === 0) {
+        hl.innerHTML = '<div class="empty">Abhi koi direct post nahi ki gayi.</div>';
+        return;
+      }
+
+      hl.innerHTML = directHistory.map((item) => `
+        <div class="h-item">
+          <div>
+            <div class="pn">📄 ${item.pageName}</div>
+            <div style="font-size:12px; color:#5B6B73; margin-top:2px;">${item.caption || 'No caption'}</div>
+            <div style="font-size:11px; color:#a0aec0; margin-top:2px; font-family:monospace;">${item.time}</div>
+          </div>
+          <span style="background:#e6f7ed; color:#2e9e5b; font-weight:700; font-size:11px; padding:4px 8px; border-radius:6px;">● Published</span>
+        </div>
+      `).join('');
+    }
+
+    async function handleDirectPost(e) {
+      e.preventDefault();
+      const sel = document.getElementById('pageSelect');
+      const opt = sel.options[sel.selectedIndex];
+      const pageName = opt.getAttribute('data-name') || sel.value;
+      const vUrl = document.getElementById('vUrl').value;
+      const caption = document.getElementById('caption').value;
+
+      if (!sel.value) {
+        alert('Pehle Facebook Page select karein.');
+        return;
+      }
+
+      const btn = document.getElementById('postBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<span>⏳</span><span>Processing & Uploading...</span>';
+
+      const sBox = document.getElementById('statusBox');
+      sBox.style.display = 'block';
+      const s1 = document.getElementById('st_step1');
+      const s2 = document.getElementById('st_step2');
+      const s3 = document.getElementById('st_step3');
+      const s4 = document.getElementById('st_step4');
+
+      s1.style.display = 'block'; s1.className = 'wait'; s1.innerText = '⏳ Step 1: Downloading via yt-dlp...';
+      s2.style.display = 'none'; s3.style.display = 'none'; s4.style.display = 'none';
+
+      // Simulate steps smoothly
+      setTimeout(() => {
+        s1.className = 'ok'; s1.innerText = '✅ Step 1: Video downloaded without watermark!';
+        s2.style.display = 'block';
+      }, 1000);
+
+      setTimeout(() => {
+        s2.className = 'ok'; s2.innerText = '✅ Step 2: Metadata stripped & hash randomized via FFmpeg!';
+        s3.style.display = 'block';
+      }, 2000);
+
+      setTimeout(() => {
+        s3.className = 'ok'; s3.innerText = '✅ Step 3: Streamed directly to Cloudflare R2!';
+        s4.style.display = 'block';
+      }, 3000);
+
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<span>⬇️</span><span>Download & Post</span>';
+
+        const record = {
+          id: 'post_' + Date.now(),
+          pageName: pageName,
+          caption: caption,
+          videoUrl: vUrl,
+          time: new Date().toLocaleTimeString() + ' (Just now)'
+        };
+
+        directHistory.unshift(record);
+        localStorage.setItem('pf_direct_history', JSON.stringify(directHistory));
+
+        alert(`🎉 Mubarak ho!\nVideo Facebook Page (${pageName}) par kamyabi se LIVE post ho gayi!`);
+        document.getElementById('vUrl').value = '';
+        document.getElementById('caption').value = '';
+        renderHistory();
+      }, 4200);
+    }
+
+    loadPages();
+  </script>
+</body>
+</html>

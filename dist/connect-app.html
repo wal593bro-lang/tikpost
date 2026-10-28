@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>App settings — PostFlow</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #F4F7F9; color: #0E2A2F; min-height: 100vh; display: flex; }
+
+    /* SIDEBAR (PostFlow Signature #0E2A2F) */
+    .sidebar {
+      width: 250px;
+      background: #0E2A2F;
+      color: #A0B2B7;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      z-index: 100;
+      overflow-y: auto;
+    }
+    .logo-box {
+      padding: 22px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #fff;
+      font-size: 20px;
+      font-weight: 800;
+      border-bottom: 1px solid #163E45;
+      text-decoration: none;
+    }
+    .logo-badge {
+      width: 34px;
+      height: 34px;
+      background: #F7C948;
+      color: #0E2A2F;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      font-weight: 900;
+    }
+    .nav-label {
+      padding: 18px 20px 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #627D83;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      color: #A0B2B7;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .nav-item:hover { background: #13353B; color: #fff; }
+    .nav-item.active { background: #163E45; color: #F7C948; font-weight: 700; border-left: 3px solid #F7C948; }
+    .nav-item-left { display: flex; align-items: center; gap: 10px; }
+
+    .user-footer {
+      margin-top: auto;
+      padding: 16px 20px;
+      border-top: 1px solid #163E45;
+      background: #0B2226;
+      font-size: 12px;
+    }
+    .user-email { color: #A0B2B7; font-size: 12px; font-weight: 600; word-break: break-all; margin-bottom: 4px; }
+    .user-change-btn {
+      color: #F7C948;
+      font-size: 11px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+
+    /* MAIN */
+    .main { margin-left: 250px; flex: 1; padding: 28px 36px; min-height: 100vh; }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(340px, 1fr);
+      gap: 24px;
+      align-items: start;
+      max-width: 1200px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 24px;
+      border: 1px solid #D8E0E5;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      margin-bottom: 20px;
+    }
+    .card-title { font-size: 18px; font-weight: 800; color: #0E2A2F; margin-bottom: 6px; }
+    .card-desc { font-size: 13px; color: #64748B; margin-bottom: 18px; line-height: 1.5; }
+
+    /* ACTIVE APP BADGE */
+    .active-badge-bar {
+      background: #E8F5E9;
+      color: #2E7D32;
+      border: 1px solid #C8E6C9;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* QUICK NGROK APPLIER BAR */
+    .quick-bar {
+      background: #F0FDF4;
+      border: 1px solid #86EFAC;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 18px;
+    }
+    .quick-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #166534;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .quick-row { display: flex; gap: 8px; }
+    .quick-input {
+      flex: 1;
+      padding: 9px 12px;
+      border: 1px solid #86EFAC;
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+      background: #fff;
+    }
+    .quick-input:focus { border-color: #16A34A; }
+    .btn-apply-all {
+      background: #16A34A;
+      color: #fff;
+      border: none;
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-apply-all:hover { background: #15803D; }
+
+    /* URL FIELD ROW (NOW 100% EDITABLE INPUTS) */
+    .url-field-box {
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 12px;
+      background: #fff;
+      transition: border-color 0.15s;
+    }
+    .url-field-box:focus-within {
+      border-color: #1877F2;
+      box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.1);
+    }
+    .url-field-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .url-field-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #0E2A2F;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .edit-tag {
+      font-size: 10px;
+      color: #16A34A;
+      background: #DCFCE7;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+    .btn-copy {
+      background: #F1F5F9;
+      color: #0E2A2F;
+      border: 1px solid #CBD5E0;
+      border-radius: 6px;
+      padding: 4px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-copy:hover { background: #E2E8F0; }
+    .btn-copy.copied { background: #16A34A; color: #fff; border-color: #16A34A; }
+
+    .url-editable-input {
+      width: 100%;
+      background: #F8FAFC;
+      border: 1px solid #EDF2F7;
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #0E2A2F;
+      font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      outline: none;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .url-editable-input:focus {
+      background: #fff;
+      border-color: #1877F2;
+    }
+
+    .save-links-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+    }
+    .btn-save-custom {
+      background: #0E2A2F;
+      color: #fff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-save-custom:hover { background: #163E45; }
+
+    /* YELLOW HINT BOX */
+    .yellow-hint-box {
+      background: #FFFBEB;
+      border: 1px solid #FDE68A;
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-size: 12px;
+      color: #92400E;
+      line-height: 1.55;
+      margin-top: 18px;
+    }
+
+    /* RIGHT COLUMN STYLES */
+    .app-status-card {
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .app-status-name { font-size: 14px; font-weight: 800; color: #0E2A2F; display: flex; align-items: center; gap: 8px; }
+    .badge-dot { width: 8px; height: 8px; border-radius: 50%; background: #22C55E; display: inline-block; }
+    .badge-active { color: #16A34A; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+    .app-status-sub { font-size: 12px; color: #64748B; margin-top: 4px; }
+    .btn-delete {
+      background: #fff;
+      border: 1px solid #FCA5A5;
+      color: #EF4444;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px; }
+    .field input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid #CBD5E0;
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+    }
+    .field input:focus { border-color: #0E2A2F; }
+
+    .btn-save-app {
+      background: #0E2A2F;
+      color: #fff;
+      border: none;
+      padding: 12px 22px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-save-app:hover { background: #13353B; }
+
+    .step-item {
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      background: #F8FAFC;
+      border: 1px solid #EDF2F7;
+      border-radius: 10px;
+      margin-bottom: 8px;
+    }
+    .step-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #0E2A2F;
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .step-t { font-size: 13px; font-weight: 700; color: #0E2A2F; margin-bottom: 2px; }
+    .step-s { font-size: 12px; color: #64748B; }
+
+    .btn-goto {
+      width: 100%;
+      background: #16A34A;
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 16px;
+      text-decoration: none;
+      display: block;
+      text-align: center;
+    }
+
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR (100% Dedicated Facebook Navigation) -->
+  <aside class="sidebar">
+    <a class="logo-box" href="/dashboard.html">
+      <div class="logo-badge">✈</div>
+      <span>PostFlow</span>
+    </a>
+
+    <div class="nav-label">Facebook</div>
+    <a class="nav-item" href="/dashboard.html"><div class="nav-item-left"><span>📊 Dashboard</span></div></a>
+    <a class="nav-item active" href="/connect-app.html"><div class="nav-item-left"><span>🔑 App settings</span></div></a>
+
+    <div class="nav-label">Posting</div>
+    <a class="nav-item" href="/media-library.html"><div class="nav-item-left"><span>📁 Media library</span></div></a>
+    <a class="nav-item" href="/direct-post.html"><div class="nav-item-left"><span>🚀 Post now</span></div></a>
+
+    <div class="nav-label">Automation</div>
+    <a class="nav-item" href="/auto-upload.html"><div class="nav-item-left"><span>⬇️ Auto download & upload</span></div></a>
+    <a class="nav-item" href="/schedule.html"><div class="nav-item-left"><span>📅 Schedule</span></div></a>
+
+    <div class="user-footer">
+      <div class="user-email" id="sidebarEmail">danisahib0@gmail.com</div>
+      <a class="user-change-btn" href="/dashboard.html">Return to Dashboard</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="layout">
+      <!-- LEFT COLUMN: LINKS TO ADD IN FACEBOOK -->
+      <div>
+        <div class="card">
+          <div class="card-title">Links to add in Facebook</div>
+          <div class="card-desc">Copy each value exactly as shown. Facebook will reject sign-in if any of them is different.</div>
+
+          <div class="active-badge-bar">
+            <span>✓ Active app: <span id="activeAppIdText">1118086157356715</span></span>
+          </div>
+
+          <!-- NGROK / LIVE HTTPS QUICK UPDATER -->
+          <div class="quick-bar">
+            <div class="quick-title">
+              <span>🌐 Naya Ngrok ya Live URL Paste Karein:</span>
+              <span style="font-size: 11px; color:#15803D;">(1-Click auto update)</span>
+            </div>
+            <div class="quick-row">
+              <input type="text" id="quickUrlInput" class="quick-input" placeholder="https://postflowapp.online" value="https://postflowapp.online">
+              <button type="button" class="btn-apply-all" onclick="applyQuickUrl()">Update All Links</button>
+            </div>
+          </div>
+
+          <!-- 1. APP DOMAIN (EDITABLE) -->
+          <div class="url-field-box">
+            <div class="url-field-top">
+              <span class="url-field-label">App domain <span class="edit-tag">Editable</span></span>
+              <button class="btn-copy" onclick="copyInput('valDomain', this)">Copy</button>
+            </div>
+            <input type="text" id="valDomain" class="url-editable-input" value="postflowapp.online">
+          </div>
+
+          <!-- 2. WEBSITE URL (EDITABLE) -->
+          <div class="url-field-box">
+            <div class="url-field-top">
+              <span class="url-field-label">Website URL <span class="edit-tag">Editable</span></span>
+              <button class="btn-copy" onclick="copyInput('valWebsite', this)">Copy</button>
+            </div>
+            <input type="text" id="valWebsite" class="url-editable-input" value="https://postflowapp.online">
+          </div>
+
+          <!-- 3. VALID OAUTH REDIRECT URI (EDITABLE) -->
+          <div class="url-field-box">
+            <div class="url-field-top">
+              <span class="url-field-label">Valid OAuth redirect URI <span class="edit-tag">Editable</span></span>
+              <button class="btn-copy" onclick="copyInput('valOauth', this)">Copy</button>
+            </div>
+            <input type="text" id="valOauth" class="url-editable-input" value="https://postflowapp.online/fb/callback">
+          </div>
+
+          <!-- 4. PRIVACY POLICY URL (EDITABLE) -->
+          <div class="url-field-box">
+            <div class="url-field-top">
+              <span class="url-field-label">Privacy policy URL <span class="edit-tag">Editable</span></span>
+              <button class="btn-copy" onclick="copyInput('valPrivacy', this)">Copy</button>
+            </div>
+            <input type="text" id="valPrivacy" class="url-editable-input" value="https://postflowapp.online/privacy.html">
+          </div>
+
+          <!-- 5. USER DATA DELETION URL (EDITABLE) -->
+          <div class="url-field-box">
+            <div class="url-field-top">
+              <span class="url-field-label">User data deletion URL <span class="edit-tag">Editable</span></span>
+              <button class="btn-copy" onclick="copyInput('valDelete', this)">Copy</button>
+            </div>
+            <input type="text" id="valDelete" class="url-editable-input" value="https://postflowapp.online/data-deletion.html">
+          </div>
+
+          <div class="save-links-row">
+            <button type="button" class="btn-save-custom" onclick="saveCustomLinks()">💾 Save Edited Links</button>
+            <button type="button" onclick="resetToLocalhost()" style="background:none; border:none; color:#64748B; font-size:11px; cursor:pointer; text-decoration:underline;">Reset to Localhost</button>
+          </div>
+
+          <div class="yellow-hint-box" id="hintBox">
+            These links use this website's address: <strong id="hintBaseUrl">https://postflowapp.online</strong>. Facebook only accepts <strong>https</strong> links for a live app. You can freely edit any box above or copy them directly into Meta Developer Console.
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: ADD AN APP -->
+      <div>
+        <div class="card">
+          <div class="card-title">Your Facebook apps (1)</div>
+          <div class="card-desc">Only one app can be active at a time. Choose "Make active" to switch. The others turn inactive automatically.</div>
+
+          <div class="app-status-card">
+            <div>
+              <div class="app-status-name">
+                <span id="savedAppName">Unnamed app</span>
+                <span class="badge-active"><span class="badge-dot"></span> Active</span>
+              </div>
+              <div class="app-status-sub">ID <span id="cardAppId">1118086157356715</span> · Secret ••••f263</div>
+            </div>
+            <button class="btn-delete" onclick="deleteCurrentApp()">Delete</button>
+          </div>
+
+          <div class="card-title" style="margin-top: 24px;">Add an app</div>
+          <div class="card-desc">Copy the App ID and App Secret from your app's Settings → Basic page in the Developer Console.</div>
+
+          <form onsubmit="handleSaveMetaApp(event)">
+            <div class="field">
+              <label>App name (optional)</label>
+              <input type="text" id="inAppName" placeholder="e.g. Main posting app">
+            </div>
+            <div class="field">
+              <label>App ID</label>
+              <input type="text" id="inAppId" placeholder="e.g. 1118086157356715" value="1118086157356715" required>
+            </div>
+            <div class="field">
+              <label>App Secret</label>
+              <input type="password" id="inAppSecret" placeholder="••••••••••••••••••••" value="••••••••••••••••••••" required>
+            </div>
+            <div style="font-size:11px; color:#64748B; margin-bottom:14px;">Stored on your server only. After saving, only the last 4 characters are shown.</div>
+            <button type="submit" class="btn-save-app">Save app</button>
+          </form>
+
+          <div style="margin-top: 26px;">
+            <div class="step-item">
+              <div class="step-num">1</div>
+              <div>
+                <div class="step-t">Add the links in Facebook</div>
+                <div class="step-s">App domain, redirect, privacy and data deletion links.</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num">2</div>
+              <div>
+                <div class="step-t">Save your app keys</div>
+                <div class="step-s">You can connect accounts once an app is active.</div>
+              </div>
+            </div>
+            <div class="step-item">
+              <div class="step-num">3</div>
+              <div>
+                <div class="step-t">Connect your pages</div>
+                <div class="step-s">Go to Accounts and finish the Facebook sign-in.</div>
+              </div>
+            </div>
+
+            <a href="/accounts.html" class="btn-goto">Go to Accounts</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const STORAGE_BASE_URL_KEY = 'postflow_base_url';
+    const STORAGE_META_APP_KEY = 'postflow_fb_app_config';
+    const STORAGE_CUSTOM_URLS_KEY = 'postflow_custom_urls';
+
+    // Apply URL to all 5 fields
+    function applyQuickUrl() {
+      let url = document.getElementById('quickUrlInput').value.trim();
+      if (!url) {
+        alert('Please enter your ngrok link');
+        return;
+      }
+
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+      }
+      url = url.replace(/\/+$/, '');
+
+      let domain = 'localhost';
+      try {
+        const u = new URL(url);
+        domain = u.hostname;
+      } catch (e) {
+        domain = url.replace(/^https?:\/\//, '').split('/')[0];
+      }
+
+      document.getElementById('valDomain').value = domain;
+      document.getElementById('valWebsite').value = url;
+      document.getElementById('valOauth').value = url + '/fb/callback';
+      document.getElementById('valPrivacy').value = url + '/privacy';
+      document.getElementById('valDelete').value = url + '/data-deletion';
+      document.getElementById('hintBaseUrl').innerText = url;
+
+      saveCustomLinks(false);
+      alert('✅ Saare links aapke ngrok link ke sath update ho gaye hain!\nAb aap "Copy" dabayein aur Facebook Developer Console mein paste karein.');
+    }
+
+    // Save individual edited inputs
+    function saveCustomLinks(showAlert = true) {
+      const data = {
+        domain: document.getElementById('valDomain').value.trim(),
+        website: document.getElementById('valWebsite').value.trim(),
+        oauth: document.getElementById('valOauth').value.trim(),
+        privacy: document.getElementById('valPrivacy').value.trim(),
+        deletion: document.getElementById('valDelete').value.trim()
+      };
+      localStorage.setItem(STORAGE_CUSTOM_URLS_KEY, JSON.stringify(data));
+      if (showAlert) {
+        alert('✅ Custom links saved successfully!');
+      }
+    }
+
+    function resetToLocalhost() {
+      document.getElementById('quickUrlInput').value = 'http://localhost:3000';
+      applyQuickUrl();
+    }
+
+    // Copy from Input field
+    function copyInput(elemId, btn) {
+      const input = document.getElementById(elemId);
+      input.select();
+      input.setSelectionRange(0, 99999);
+      navigator.clipboard.writeText(input.value).then(() => {
+        const old = btn.innerText;
+        btn.innerText = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.innerText = old;
+          btn.classList.remove('copied');
+        }, 1200);
+      });
+    }
+
+    // Save Meta App
+    function handleSaveMetaApp(e) {
+      e.preventDefault();
+      const name = document.getElementById('inAppName').value.trim() || 'Unnamed app';
+      const id = document.getElementById('inAppId').value.trim();
+      const secret = document.getElementById('inAppSecret').value.trim();
+
+      if (!id || !secret) {
+        alert('Please enter App ID and App Secret');
+        return;
+      }
+
+      const shortSecret = secret.length > 4 ? '••••' + secret.slice(-4) : '••••';
+      const appObj = { name, id, secret, shortSecret };
+      localStorage.setItem(STORAGE_META_APP_KEY, JSON.stringify(appObj));
+
+      loadSavedApp();
+      alert('✅ App credentials successfully saved!');
+    }
+
+    function loadSavedApp() {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_META_APP_KEY) || '{}');
+      if (saved.id) {
+        document.getElementById('activeAppIdText').innerText = saved.id;
+        document.getElementById('cardAppId').innerText = saved.id;
+        document.getElementById('savedAppName').innerText = saved.name || 'Unnamed app';
+        document.getElementById('inAppId').value = saved.id;
+        document.getElementById('inAppName').value = saved.name || '';
+      }
+    }
+
+    function deleteCurrentApp() {
+      if (confirm('Are you sure you want to delete this app?')) {
+        localStorage.removeItem(STORAGE_META_APP_KEY);
+        document.getElementById('activeAppIdText').innerText = 'None';
+        document.getElementById('cardAppId').innerText = 'None';
+        document.getElementById('savedAppName').innerText = 'No app configured';
+        document.getElementById('inAppId').value = '';
+        document.getElementById('inAppName').value = '';
+        document.getElementById('inAppSecret').value = '';
+        alert('App removed.');
+      }
+    }
+
+    window.onload = function() {
+      // Check if custom URLs were saved
+      const savedUrls = JSON.parse(localStorage.getItem(STORAGE_CUSTOM_URLS_KEY) || '{}');
+      if (savedUrls.website) {
+        document.getElementById('valDomain').value = savedUrls.domain || '';
+        document.getElementById('valWebsite').value = savedUrls.website || '';
+        document.getElementById('valOauth').value = savedUrls.oauth || '';
+        document.getElementById('valPrivacy').value = savedUrls.privacy || '';
+        document.getElementById('valDelete').value = savedUrls.deletion || '';
+        document.getElementById('quickUrlInput').value = savedUrls.website || '';
+        document.getElementById('hintBaseUrl').innerText = savedUrls.website || '';
+      }
+
+      loadSavedApp();
+    };
+  </script>
+</body>
+</html>

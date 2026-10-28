@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PostFlow — Facebook Automation & Studio Engine</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #F1F5F8; color: #0E2A2F; min-height: 100vh; display: flex; }
+
+    /* SIDEBAR (PostFlow Signature #0E2A2F) */
+    .sidebar {
+      width: 250px;
+      background: #0E2A2F;
+      color: #A0B2B7;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      z-index: 100;
+      overflow-y: auto;
+    }
+    .logo-box {
+      padding: 22px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #fff;
+      font-size: 20px;
+      font-weight: 800;
+      border-bottom: 1px solid #163E45;
+      text-decoration: none;
+    }
+    .logo-badge {
+      width: 34px;
+      height: 34px;
+      background: #1877F2;
+      color: #fff;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      font-weight: 900;
+    }
+    .nav-label {
+      padding: 18px 20px 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #627D83;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      color: #A0B2B7;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .nav-item:hover { background: #13353B; color: #fff; }
+    .nav-item.active { background: #163E45; color: #1877F2; font-weight: 700; border-left: 3px solid #1877F2; }
+    .nav-item-left { display: flex; align-items: center; gap: 10px; }
+    .nav-badge {
+      font-size: 10px;
+      background: #1877F2;
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 700;
+    }
+
+    .user-footer {
+      margin-top: auto;
+      padding: 16px 20px;
+      border-top: 1px solid #163E45;
+      background: #0B2226;
+      font-size: 12px;
+    }
+    .user-email { color: #A0B2B7; font-size: 12px; font-weight: 600; word-break: break-all; margin-bottom: 4px; }
+    .user-change-btn {
+      color: #1877F2;
+      font-size: 11px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+    .user-change-btn:hover { text-decoration: underline; }
+
+    /* MAIN CONTENT */
+    .main {
+      margin-left: 250px;
+      flex: 1;
+      padding: 24px 32px;
+      min-height: 100vh;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      background: #fff;
+      padding: 16px 24px;
+      border-radius: 12px;
+      border: 1px solid #D8E0E5;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .topbar h2 { font-size: 20px; font-weight: 800; color: #0E2A2F; }
+    .topbar .sub { font-size: 12px; color: #718096; margin-top: 2px; }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .topbar-user { font-size: 13px; color: #4A5568; display: flex; align-items: center; gap: 8px; }
+
+    /* HERO BANNER */
+    .hero-card {
+      background: linear-gradient(135deg, #ffffff 0%, #F0F6FF 100%);
+      border: 1px solid #BFDBFE;
+      border-radius: 14px;
+      padding: 24px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 22px;
+      box-shadow: 0 2px 6px rgba(24, 119, 242, 0.05);
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .hero-title { font-size: 20px; font-weight: 800; display: flex; align-items: center; gap: 10px; color: #0E2A2F; }
+    .hero-desc { font-size: 13px; color: #4B5563; margin-top: 4px; }
+    .btn {
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .btn:hover { opacity: 0.92; transform: translateY(-1px); }
+    .btn-fb { background: #1877F2; color: #fff; }
+    .btn-dark { background: #0E2A2F; color: #fff; }
+    .btn-danger { background: #EF4444; color: #fff; }
+    .btn-outline { background: #fff; color: #0E2A2F; border: 1px solid #CBD5E0; }
+    .btn-outline:hover { background: #F8FAFC; }
+
+    /* STATS GRID (6 Clean Empty-Ready Cards) */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: #fff;
+      border: 1px solid #D8E0E5;
+      border-radius: 12px;
+      padding: 18px 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .stat-head {
+      font-size: 11px;
+      font-weight: 700;
+      color: #718096;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .stat-val { font-size: 26px; font-weight: 800; color: #0E2A2F; margin: 8px 0 2px; }
+    .stat-sub { font-size: 11px; color: #A0AEC0; }
+
+    /* SECTION CARD */
+    .section-card {
+      background: #fff;
+      border: 1px solid #D8E0E5;
+      border-radius: 14px;
+      padding: 22px 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .section-title { font-size: 16px; font-weight: 800; color: #0E2A2F; display: flex; align-items: center; gap: 8px; }
+
+    /* TABLE */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      text-align: left;
+      padding: 12px 14px;
+      color: #718096;
+      font-weight: 700;
+      border-bottom: 2px solid #EDF2F7;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.4px;
+    }
+    td { padding: 14px; border-bottom: 1px solid #EDF2F7; color: #2D3748; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+
+    /* BADGES */
+    .badge { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; display: inline-block; }
+    .badge-success { background: #DEF7EC; color: #03543F; }
+    .badge-info { background: #E1EFFE; color: #1E429F; }
+
+    /* EMPTY STATE (Clean Pristine Design) */
+    .empty-state {
+      padding: 48px 24px;
+      text-align: center;
+      border: 2px dashed #D8E0E5;
+      border-radius: 14px;
+      background: #F9FBFC;
+      margin-top: 8px;
+    }
+    .empty-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: #EFF6FF;
+      color: #1877F2;
+      display: inline-grid;
+      place-items: center;
+      font-size: 26px;
+      margin-bottom: 14px;
+    }
+    .empty-title { font-size: 17px; font-weight: 800; color: #0E2A2F; margin-bottom: 6px; }
+    .empty-desc { font-size: 13px; color: #64748B; max-width: 440px; margin: 0 auto 18px; line-height: 1.5; }
+
+    /* MODAL */
+    .modal-backdrop {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(14, 42, 47, 0.6);
+      display: none;
+      place-items: center;
+      z-index: 1000;
+      backdrop-filter: blur(2px);
+    }
+    .modal-card {
+      background: #fff;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 500px;
+      padding: 26px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+    .modal-title { font-size: 18px; font-weight: 800; color: #0E2A2F; margin-bottom: 16px; }
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 12px; font-weight: 700; color: #4A5568; margin-bottom: 6px; text-transform: uppercase; }
+    .field input, .field select, .field textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #CBD5E0;
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+      font-family: inherit;
+    }
+    .field input:focus, .field textarea:focus { border-color: #1877F2; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR (100% Dedicated Facebook Navigation) -->
+  <aside class="sidebar">
+    <a class="logo-box" href="/dashboard.html">
+      <div class="logo-badge">f</div>
+      <span>PostFlow</span>
+    </a>
+
+    <!-- FACEBOOK SECTION -->
+    <div class="nav-label">Facebook</div>
+    <div class="nav-item active" id="nav-fb-dash" onclick="location.href='/dashboard.html'">
+      <div class="nav-item-left">
+        <span>📊 Dashboard</span>
+      </div>
+      <span class="nav-badge" id="fbCountBadge">0</span>
+    </div>
+    <a class="nav-item" href="/connect-app.html">
+      <div class="nav-item-left">
+        <span>🔑 App settings</span>
+      </div>
+    </a>
+
+    <!-- POSTING SECTION -->
+    <div class="nav-label">Posting</div>
+    <a class="nav-item" href="/media-library.html">
+      <div class="nav-item-left">
+        <span>📁 Media library</span>
+      </div>
+    </a>
+    <a class="nav-item" href="/direct-post.html">
+      <div class="nav-item-left">
+        <span>🚀 Post now</span>
+      </div>
+    </a>
+
+    <!-- AUTOMATION SECTION -->
+    <div class="nav-label">Automation</div>
+    <a class="nav-item" href="/auto-upload.html">
+      <div class="nav-item-left">
+        <span>⬇️ Auto download & upload</span>
+      </div>
+    </a>
+    <a class="nav-item" href="/schedule.html">
+      <div class="nav-item-left">
+        <span>📅 Schedule</span>
+      </div>
+    </a>
+
+    <!-- USER FOOTER -->
+    <div class="user-footer">
+      <div class="user-email" id="sidebarEmail">danisahib0@gmail.com</div>
+      <button class="user-change-btn" onclick="openChangeAccountModal()">Change Account</button>
+    </div>
+  </aside>
+
+  <!-- MAIN AREA -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h2 id="topbarTitle">PostFlow · Facebook Automation & Studio Engine</h2>
+        <div class="sub" id="topbarSubtitle">Manage connected Facebook Pages, schedule posts, and automate video pipelines</div>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-outline" style="font-size: 11px; padding: 6px 12px; border-color: #E2E8F0;" onclick="clearAllData()" title="Clear all local cache">
+          🧹 Clear All Data
+        </button>
+        <div class="topbar-user">
+          <span id="currentAccountBadge">danisahib0@gmail.com</span>
+          <button class="user-change-btn" style="margin-left:4px;" onclick="openChangeAccountModal()">Switch</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= FACEBOOK DASHBOARD VIEW ================= -->
+    <div id="sec-facebook-dashboard" class="content-section">
+      <!-- HERO CARD -->
+      <div class="hero-card">
+        <div>
+          <div class="hero-title">📘 Facebook Pages & Multi-Page Publishing</div>
+          <div class="hero-desc">Connect your Facebook pages to automate video uploads, reels, captions, and manage scheduled posts.</div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn btn-outline" onclick="openAddFbModal()">+ Connect Facebook Page</button>
+          <button class="btn btn-fb" onclick="openCreatePostModal()">🚀 Create Post</button>
+        </div>
+      </div>
+
+      <!-- 6 FACEBOOK STATS CARDS -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-head"><span>CONNECTED PAGES</span><span>📄</span></div>
+          <div class="stat-val" id="fbPagesCount">0</div>
+          <div class="stat-sub">Active Facebook pages</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-head"><span>PUBLISHED TODAY</span><span>🚀</span></div>
+          <div class="stat-val" id="fbPostsCount" style="color: #2E9E5B;">0</div>
+          <div class="stat-sub">Published to Facebook</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-head"><span>ACTIVE PIPELINES</span><span>⚡</span></div>
+          <div class="stat-val" id="fbPipelinesCount" style="color: #1877F2;">0</div>
+          <div class="stat-sub">Auto download & upload</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-head"><span>IN QUEUE</span><span>⏳</span></div>
+          <div class="stat-val" id="fbScheduledCount" style="color: #D97706;">0</div>
+          <div class="stat-sub">Scheduled release queue</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-head"><span>BUFFER HEALTH</span><span>🛡️</span></div>
+          <div class="stat-val" style="color: #0E2A2F;">Ready</div>
+          <div class="stat-sub">Queue buffer status</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-head"><span>SUCCESS RATE</span><span>🎯</span></div>
+          <div class="stat-val" style="color: #2E9E5B;">100%</div>
+          <div class="stat-sub">Graph API pipeline status</div>
+        </div>
+      </div>
+
+      <!-- CONNECTED PAGES SECTION -->
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-title">📄 Connected Facebook Pages</div>
+          <button class="btn btn-outline" style="padding: 6px 14px; font-size: 12px;" onclick="openAddFbModal()">+ Add Page</button>
+        </div>
+        <div id="fbPagesContainer"></div>
+      </div>
+
+      <!-- RECENT ACTIVITY & QUEUE TABLE -->
+      <div class="section-card">
+        <div class="section-header">
+          <div class="section-title">📝 Facebook Posting Activity & Details</div>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="fbSearchInput" placeholder="Search page or post content..." oninput="filterFbTable()" style="padding: 6px 12px; border: 1px solid #CBD5E0; border-radius: 8px; font-size: 12px; outline: none;">
+            <button class="btn btn-fb" style="padding: 6px 14px; font-size: 12px;" onclick="openCreatePostModal()">+ Create Post</button>
+          </div>
+        </div>
+        <div id="fbPostsContainer"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL: ADD FACEBOOK PAGE -->
+  <div class="modal-backdrop" id="addFbModal">
+    <div class="modal-card">
+      <div class="modal-title">📘 Connect Facebook Page</div>
+      <div class="field">
+        <label>Facebook Page Name</label>
+        <input type="text" id="modalFbName" placeholder="e.g. My Official Brand Page">
+      </div>
+      <div class="field">
+        <label>Facebook Page ID</label>
+        <input type="text" id="modalFbId" placeholder="e.g. 102938475612345">
+      </div>
+      <div class="field">
+        <label>Category / Niche</label>
+        <select id="modalFbCategory">
+          <option>General & Brand</option>
+          <option>Entertainment & Memes</option>
+          <option>Gaming & Streams</option>
+          <option>News & Media</option>
+          <option>Educational & Tech</option>
+          <option>Personal Blog</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Page Access Token (Optional)</label>
+        <input type="password" id="modalFbToken" placeholder="EAABw... (leaves default if empty)">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeAddFbModal()">Cancel</button>
+        <button class="btn btn-fb" onclick="saveNewFacebookPage()">Save Page</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CREATE POST -->
+  <div class="modal-backdrop" id="createPostModal">
+    <div class="modal-card">
+      <div class="modal-title">📝 Create / Schedule Facebook Post</div>
+      <div class="field">
+        <label>Select Target Page</label>
+        <select id="modalPostPageSelect"></select>
+      </div>
+      <div class="field">
+        <label>Post Caption / Text</label>
+        <textarea id="modalPostText" rows="3" placeholder="Write your post caption here..."></textarea>
+      </div>
+      <div class="field">
+        <label>Timing / Schedule</label>
+        <select id="modalPostTiming">
+          <option value="now">Publish Immediately</option>
+          <option value="scheduled">Schedule for Queue</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeCreatePostModal()">Cancel</button>
+        <button class="btn btn-fb" onclick="saveNewPost()">Publish / Queue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CHANGE ACCOUNT -->
+  <div class="modal-backdrop" id="changeAccModal">
+    <div class="modal-card">
+      <div class="modal-title">👤 Switch / Change Account</div>
+      <div class="field">
+        <label>Email Address</label>
+        <input type="email" id="modalAccEmail" value="danisahib0@gmail.com" placeholder="your-email@gmail.com">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeChangeAccModal()">Cancel</button>
+        <button class="btn btn-fb" onclick="saveChangedAccount()">Update Account</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const FB_PAGES_KEY = 'postflow_fb_pages';
+    const FB_POSTS_KEY = 'postflow_fb_posts';
+    const ACC_EMAIL_KEY = 'postflow_user_email';
+
+    // Auto-purge any demo data from older sessions
+    function purgeDemoDataIfPresent() {
+      const storedPages = JSON.parse(localStorage.getItem(FB_PAGES_KEY) || '[]');
+      const isDemo = storedPages.some(p => p.name === 'Daily Viral Clips' || p.name === 'Gaming Highlights HD' || p.name === 'Tech & Gadgets Daily');
+      if (isDemo) {
+        localStorage.setItem(FB_PAGES_KEY, JSON.stringify([]));
+        localStorage.setItem(FB_POSTS_KEY, JSON.stringify([]));
+      }
+    }
+
+    function clearAllData() {
+      if (confirm('Kya aap saara data clear karke bilkul FRESH (0 pages, 0 posts) shuru karna chahte hain?')) {
+        localStorage.setItem(FB_PAGES_KEY, JSON.stringify([]));
+        localStorage.setItem(FB_POSTS_KEY, JSON.stringify([]));
+        loadFacebookData();
+        alert('All data cleared! Dashboard is now 100% fresh.');
+      }
+    }
+
+    function getCurrentEmail() {
+      return localStorage.getItem(ACC_EMAIL_KEY) || 'danisahib0@gmail.com';
+    }
+
+    function updateAccountDisplays() {
+      const email = getCurrentEmail();
+      const sEmail = document.getElementById('sidebarEmail');
+      const bEmail = document.getElementById('currentAccountBadge');
+      const mEmail = document.getElementById('modalAccEmail');
+      if (sEmail) sEmail.innerText = email;
+      if (bEmail) bEmail.innerText = email;
+      if (mEmail) mEmail.value = email;
+    }
+
+    function loadFacebookData() {
+      const pages = JSON.parse(localStorage.getItem(FB_PAGES_KEY) || '[]');
+      const posts = JSON.parse(localStorage.getItem(FB_POSTS_KEY) || '[]');
+
+      document.getElementById('fbPagesCount').innerText = pages.length;
+      document.getElementById('fbCountBadge').innerText = pages.length;
+      document.getElementById('fbPostsCount').innerText = posts.filter(p => p.status === 'Published').length;
+      document.getElementById('fbScheduledCount').innerText = posts.filter(p => p.status === 'Scheduled').length;
+
+      // Render Connected Pages
+      const pContainer = document.getElementById('fbPagesContainer');
+      if (pages.length === 0) {
+        pContainer.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">📘</div>
+            <div class="empty-title">No Facebook Pages Connected Yet</div>
+            <div class="empty-desc">Connect your real Facebook pages to schedule automatic posts and manage multiple pages from one dashboard.</div>
+            <button class="btn btn-fb" onclick="openAddFbModal()">+ Connect Facebook Page</button>
+          </div>
+        `;
+      } else {
+        let html = `<table>
+          <thead>
+            <tr>
+              <th>Page Name</th>
+              <th>Page ID</th>
+              <th>Category</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>`;
+        pages.forEach((p, idx) => {
+          html += `<tr>
+            <td><strong>${escapeHtml(p.name)}</strong></td>
+            <td><code>${escapeHtml(p.id)}</code></td>
+            <td>${escapeHtml(p.category || 'General')}</td>
+            <td><span class="badge badge-success">Connected</span></td>
+            <td>
+              <button class="btn btn-fb" style="padding: 4px 10px; font-size: 11px;" onclick="openCreatePostModal('${escapeHtml(p.name)}')">Post</button>
+              <button class="btn btn-outline" style="padding: 4px 10px; font-size: 11px; margin-left: 4px;" onclick="removeFbPage(${idx})">Disconnect</button>
+            </td>
+          </tr>`;
+        });
+        html += `</tbody></table>`;
+        pContainer.innerHTML = html;
+      }
+
+      // Render Posts
+      renderFbPostsTable(posts);
+      populatePageDropdown(pages);
+    }
+
+    function renderFbPostsTable(posts) {
+      const postContainer = document.getElementById('fbPostsContainer');
+      if (posts.length === 0) {
+        postContainer.innerHTML = `
+          <div class="empty-state" style="padding: 36px 20px;">
+            <div class="empty-icon">📝</div>
+            <div class="empty-title">No Facebook Posts Yet</div>
+            <div class="empty-desc">Abhi koi post record nahi hai. "+ Create Post" par click karein aur apni pehli post publish ya schedule karein.</div>
+            <button class="btn btn-fb" onclick="openCreatePostModal()">+ Create Post</button>
+          </div>
+        `;
+      } else {
+        let html = `<table>
+          <thead>
+            <tr>
+              <th>Post Content</th>
+              <th>Target Page</th>
+              <th>Timing</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>`;
+        posts.forEach((post, idx) => {
+          const badgeClass = post.status === 'Published' ? 'badge-success' : 'badge-info';
+          html += `<tr>
+            <td style="max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(post.text || 'Media post')}</td>
+            <td><strong>${escapeHtml(post.pageName || 'Main Page')}</strong></td>
+            <td>${escapeHtml(post.date || 'Just now')}</td>
+            <td><span class="badge ${badgeClass}">${escapeHtml(post.status || 'Published')}</span></td>
+            <td><button class="btn btn-outline" style="padding: 4px 10px; font-size: 11px;" onclick="deleteFbPost(${idx})">Delete</button></td>
+          </tr>`;
+        });
+        html += `</tbody></table>`;
+        postContainer.innerHTML = html;
+      }
+    }
+
+    function populatePageDropdown(pages) {
+      const select = document.getElementById('modalPostPageSelect');
+      if (!select) return;
+      if (pages.length === 0) {
+        select.innerHTML = '<option value="">No page connected (add a page first)</option>';
+      } else {
+        select.innerHTML = pages.map(p => `<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)} (${escapeHtml(p.id)})</option>`).join('');
+      }
+    }
+
+    function filterFbTable() {
+      const q = (document.getElementById('fbSearchInput').value || '').toLowerCase();
+      const posts = JSON.parse(localStorage.getItem(FB_POSTS_KEY) || '[]');
+      const filtered = posts.filter(p => (p.text || '').toLowerCase().includes(q) || (p.pageName || '').toLowerCase().includes(q));
+      renderFbPostsTable(filtered);
+    }
+
+    // MODAL CONTROLS
+    function openAddFbModal() { document.getElementById('addFbModal').style.display = 'grid'; }
+    function closeAddFbModal() { document.getElementById('addFbModal').style.display = 'none'; }
+    function openCreatePostModal(presetPage) {
+      const pages = JSON.parse(localStorage.getItem(FB_PAGES_KEY) || '[]');
+      if (pages.length === 0) {
+        alert('Pehle "+ Connect Facebook Page" se apna Facebook Page add karein.');
+        openAddFbModal();
+        return;
+      }
+      populatePageDropdown(pages);
+      if (presetPage) {
+        document.getElementById('modalPostPageSelect').value = presetPage;
+      }
+      document.getElementById('createPostModal').style.display = 'grid';
+    }
+    function closeCreatePostModal() { document.getElementById('createPostModal').style.display = 'none'; }
+    function openChangeAccountModal() { document.getElementById('changeAccModal').style.display = 'grid'; }
+    function closeChangeAccModal() { document.getElementById('changeAccModal').style.display = 'none'; }
+
+    // SAVE PAGE
+    function saveNewFacebookPage() {
+      const name = document.getElementById('modalFbName').value.trim();
+      const id = document.getElementById('modalFbId').value.trim();
+      const category = document.getElementById('modalFbCategory').value;
+      if (!name || !id) {
+        alert('Please enter Facebook Page Name and ID');
+        return;
+      }
+      const pages = JSON.parse(localStorage.getItem(FB_PAGES_KEY) || '[]');
+      pages.push({ name, id, category, date: 'Active' });
+      localStorage.setItem(FB_PAGES_KEY, JSON.stringify(pages));
+      closeAddFbModal();
+      document.getElementById('modalFbName').value = '';
+      document.getElementById('modalFbId').value = '';
+      loadFacebookData();
+    }
+
+    // SAVE POST
+    function saveNewPost() {
+      const pageName = document.getElementById('modalPostPageSelect').value;
+      const text = document.getElementById('modalPostText').value.trim();
+      const timing = document.getElementById('modalPostTiming').value;
+
+      if (!text) {
+        alert('Please write post caption/text.');
+        return;
+      }
+
+      const posts = JSON.parse(localStorage.getItem(FB_POSTS_KEY) || '[]');
+      posts.unshift({
+        text,
+        pageName: pageName || 'Default Page',
+        date: timing === 'now' ? 'Just now' : 'Scheduled',
+        status: timing === 'now' ? 'Published' : 'Scheduled'
+      });
+      localStorage.setItem(FB_POSTS_KEY, JSON.stringify(posts));
+      closeCreatePostModal();
+      document.getElementById('modalPostText').value = '';
+      loadFacebookData();
+    }
+
+    function removeFbPage(idx) {
+      if (confirm('Disconnect this Facebook Page?')) {
+        const pages = JSON.parse(localStorage.getItem(FB_PAGES_KEY) || '[]');
+        pages.splice(idx, 1);
+        localStorage.setItem(FB_PAGES_KEY, JSON.stringify(pages));
+        loadFacebookData();
+      }
+    }
+
+    function deleteFbPost(idx) {
+      if (confirm('Delete this post record?')) {
+        const posts = JSON.parse(localStorage.getItem(FB_POSTS_KEY) || '[]');
+        posts.splice(idx, 1);
+        localStorage.setItem(FB_POSTS_KEY, JSON.stringify(posts));
+        loadFacebookData();
+      }
+    }
+
+    function saveChangedAccount() {
+      const email = document.getElementById('modalAccEmail').value.trim();
+      if (!email) {
+        alert('Please enter valid email');
+        return;
+      }
+      localStorage.setItem(ACC_EMAIL_KEY, email);
+      closeChangeAccModal();
+      updateAccountDisplays();
+      alert('Account updated to: ' + email);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+      });
+    }
+
+    window.onload = function() {
+      purgeDemoDataIfPresent();
+      updateAccountDisplays();
+      loadFacebookData();
+    };
+  </script>
+</body>
+</html>

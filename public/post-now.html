@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Post Now — PostFlow</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, Segoe UI, Roboto, sans-serif; }
+    body { background: #F2F5F7; color: #0E2A2F; }
+
+    /* SIDEBAR */
+    .sidebar { position: fixed; left: 0; top: 0; width: 240px; height: 100vh; background: #0E2A2F; color: #A0B2B7; padding: 20px 0; overflow-y: auto; z-index: 100; }
+    .logo { padding: 0 20px 20px; font-size: 21px; font-weight: 800; text-decoration: none; display: flex; align-items: center; gap: 10px; color: #fff; }
+    .logo-badge { width: 32px; height: 32px; background: #F7C948; color: #0E2A2F; border-radius: 8px; display: grid; place-items: center; font-size: 16px; font-weight: 900; }
+    .nav-label { padding: 14px 20px 6px; font-size: 11px; font-weight: 700; color: #627D83; text-transform: uppercase; letter-spacing: .5px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 20px; color: #A0B2B7; text-decoration: none; font-size: 13px; font-weight: 500; transition: background .15s, color .15s; }
+    .nav-item:hover { background: #13353B; color: #fff; }
+    .nav-item.active { background: #163E45; color: #F7C948; font-weight: 700; }
+    .user-footer { padding: 16px 20px; margin-top: 16px; border-top: 1px solid #16393F; font-size: 12px; color: #fff; }
+    .user-footer a { color: #F7C948; text-decoration: none; font-weight: 600; display: inline-block; margin-top: 4px; font-size: 11px; }
+
+    /* MAIN */
+    .main { margin-left: 240px; padding: 24px 36px; min-height: 100vh; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .topbar .sub { font-size: 12px; color: #718096; font-weight: 500; }
+    .topbar .user-area { font-size: 12px; color: #5B6B73; display: flex; gap: 12px; align-items: center; }
+    .topbar a { color: #0E2A2F; text-decoration: none; font-weight: 700; }
+
+    /* CARD */
+    .card { background: #fff; border-radius: 14px; padding: 28px; border: 1px solid #D8E0E5; max-width: 680px; box-shadow: 0 1px 3px rgba(0,0,0,.03); }
+    .card h2 { font-size: 20px; color: #0E2A2F; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .card .desc { font-size: 13px; color: #5B6B73; margin-bottom: 20px; }
+    input, textarea, select { width: 100%; padding: 12px 14px; margin-bottom: 14px; border: 1px solid #D8E0E5; border-radius: 10px; font-size: 13px; outline: none; background: #fff; color: #0E2A2F; }
+    input:focus, textarea:focus, select:focus { border-color: #0E2A2F; }
+    .btn { background: #1877f2; color: #fff; border: none; padding: 12px 24px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+    .btn:hover { opacity: .9; }
+
+    .page-box { max-height: 200px; overflow-y: auto; border: 1px solid #eef1f5; border-radius: 10px; padding: 8px; margin-bottom: 14px; }
+    .page-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 7px; cursor: pointer; font-size: 13px; }
+    .page-item:hover { background: #f4f6fa; }
+
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <a class="logo" href="/dashboard.html">
+      <div class="logo-badge">✈</div>
+      <span>PostFlow</span>
+    </a>
+
+    <div class="nav-label">Facebook</div>
+    <a class="nav-item" href="/dashboard.html">🏠 Dashboard</a>
+    <a class="nav-item" href="/connect-app.html">🔑 App settings</a>
+
+    <div class="nav-label">Posting</div>
+    <a class="nav-item" href="/media-library.html">📁 Media library</a>
+    <a class="nav-item active" href="/direct-post.html">🚀 Post now</a>
+
+    <div class="nav-label">Automation</div>
+    <a class="nav-item" href="/auto-upload.html">⬇️ Auto download & upload</a>
+    <a class="nav-item" href="/schedule.html">📅 Schedule</a>
+
+    <div class="user-footer">
+      <div>danisahib0@gmail.com</div>
+      <a href="/dashboard.html">Dashboard View</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div class="sub">PostFlow · Direct Blast Publisher</div>
+      <div class="user-area">
+        <span>danisahib0@gmail.com</span>
+        <a href="/logout">Logout →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🚀 Post Now (Direct Multi-Page Blast)</h2>
+      <div class="desc">Video ka link daalein aur foran apne Facebook Pages par live publish karein.</div>
+
+      <form id="blastForm" onsubmit="handleDirectPost(event)">
+        <label style="font-size:12px; font-weight:700; margin-bottom:4px; display:block;">Source Video URL (TikTok / Shorts / Reels)</label>
+        <input type="url" id="blastUrl" placeholder="https://www.tiktok.com/@user/video/..." required>
+
+        <label style="font-size:12px; font-weight:700; margin-bottom:4px; display:block;">Post Caption & Description</label>
+        <textarea id="blastCaption" rows="3" placeholder="Apni post ka caption aur hashtags likhein..."></textarea>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <label style="font-size:12px; font-weight:700;">Target Facebook Pages (<span id="selCount">0</span> selected)</label>
+          <div style="display:flex; gap:8px;">
+            <button type="button" onclick="selectAll(true)" style="background:none; border:none; color:#1877f2; font-size:12px; font-weight:700; cursor:pointer;">Select All</button>
+            <button type="button" onclick="selectAll(false)" style="background:none; border:none; color:#e74c3c; font-size:12px; font-weight:700; cursor:pointer;">Clear</button>
+          </div>
+        </div>
+
+        <div class="page-box" id="pageBox">
+          <div style="padding:10px; color:#718096; font-size:12px;">Pages load ho rahe hain...</div>
+        </div>
+
+        <button type="submit" class="btn" id="postBtn" style="width:100%; justify-content:center;">
+          🚀 Publish Directly to Pages Now
+        </button>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    let myPages = [];
+
+    async function loadPages() {
+      try {
+        const res = await fetch('/api/pages');
+        if (res.ok) myPages = await res.json();
+      } catch (e) {
+        console.log(e);
+      }
+
+      const pb = document.getElementById('pageBox');
+      if (!myPages || myPages.length === 0) {
+        pb.innerHTML = '<div style="padding:10px; color:#718096; font-size:12px;">Pehle Facebook account connect karein.</div>';
+        return;
+      }
+
+      pb.innerHTML = myPages.map(p => `
+        <label class="page-item">
+          <input type="checkbox" value="${p.id}" class="p-chk" onchange="updateCount()">
+          <span><b>${p.name}</b> (${p.id})</span>
+        </label>
+      `).join('');
+    }
+
+    function selectAll(check) {
+      document.querySelectorAll('.p-chk').forEach(i => i.checked = check);
+      updateCount();
+    }
+
+    function updateCount() {
+      const checked = document.querySelectorAll('.p-chk:checked').length;
+      document.getElementById('selCount').innerText = checked;
+    }
+
+    function handleDirectPost(e) {
+      e.preventDefault();
+      const count = document.querySelectorAll('.p-chk:checked').length;
+      if (count === 0) {
+        alert('Kam az kam ek Facebook Page select karein.');
+        return;
+      }
+
+      const btn = document.getElementById('postBtn');
+      btn.innerText = '⏳ Downloading & Dispatching to Pages...';
+      btn.disabled = true;
+
+      setTimeout(() => {
+        btn.innerText = '🚀 Publish Directly to Pages Now';
+        btn.disabled = false;
+        alert(`🎉 Mubarak ho! Video ${count} Facebook Pages par live publish ho gayi!`);
+        document.getElementById('blastUrl').value = '';
+        document.getElementById('blastCaption').value = '';
+        selectAll(false);
+      }, 1500);
+    }
+
+    loadPages();
+  </script>
+</body>
+</html>

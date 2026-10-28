@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PostFlow — Smart Human-Safe Scheduler</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #F1F5F8; color: #0E2A2F; min-height: 100vh; display: flex; }
+
+    /* SIDEBAR (PostFlow Signature #0E2A2F) */
+    .sidebar {
+      width: 250px;
+      background: #0E2A2F;
+      color: #A0B2B7;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      z-index: 100;
+      overflow-y: auto;
+    }
+    .logo-box {
+      padding: 22px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #fff;
+      font-size: 20px;
+      font-weight: 800;
+      border-bottom: 1px solid #163E45;
+      text-decoration: none;
+    }
+    .logo-badge {
+      width: 34px;
+      height: 34px;
+      background: #1877F2;
+      color: #fff;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      font-weight: 900;
+    }
+    .nav-label {
+      padding: 18px 20px 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #627D83;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      color: #A0B2B7;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .nav-item:hover { background: #13353B; color: #fff; }
+    .nav-item.active { background: #163E45; color: #1877F2; font-weight: 700; border-left: 3px solid #1877F2; }
+    .nav-item-left { display: flex; align-items: center; gap: 10px; }
+
+    .user-footer {
+      margin-top: auto;
+      padding: 16px 20px;
+      border-top: 1px solid #163E45;
+      background: #0B2226;
+      font-size: 12px;
+    }
+    .user-email { color: #A0B2B7; font-size: 12px; font-weight: 600; word-break: break-all; margin-bottom: 4px; }
+    .user-change-btn {
+      color: #1877F2;
+      font-size: 11px;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+
+    /* MAIN CONTENT */
+    .main {
+      margin-left: 250px;
+      flex: 1;
+      padding: 24px 32px;
+      min-height: 100vh;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      background: #fff;
+      padding: 16px 24px;
+      border-radius: 12px;
+      border: 1px solid #D8E0E5;
+    }
+    .topbar h2 { font-size: 20px; font-weight: 800; color: #0E2A2F; }
+    .topbar .sub { font-size: 12px; color: #718096; margin-top: 2px; }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* CARDS */
+    .card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 26px;
+      border: 1px solid #D8E0E5;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .card-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #0E2A2F;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+    .card-desc { font-size: 13px; color: #64748B; margin-bottom: 20px; }
+
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 12px; font-weight: 700; color: #4A5568; margin-bottom: 6px; text-transform: uppercase; }
+    .field input, .field select, .field textarea {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid #CBD5E0;
+      border-radius: 10px;
+      font-size: 13px;
+      outline: none;
+      background: #fff;
+      font-family: inherit;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: #1877F2; }
+
+    /* HUMAN SAFE JITTER BOX */
+    .human-safety-box {
+      background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
+      border: 1px solid #86EFAC;
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 20px;
+    }
+    .safety-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .safety-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #166534;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #CBD5E1; transition: .25s; border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+      background-color: white; transition: .25s; border-radius: 50%;
+    }
+    input:checked + .slider { background-color: #16A34A; }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    .safety-desc {
+      font-size: 12px;
+      color: #15803D;
+      line-height: 1.45;
+    }
+
+    .jitter-preview {
+      background: #fff;
+      border: 1px solid #BBF7D0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-top: 12px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #14532D;
+      font-weight: 600;
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: #1877F2;
+      color: #fff;
+      border: none;
+      padding: 13px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-submit:hover { background: #1565C0; transform: translateY(-1px); }
+
+    /* QUEUE ITEMS */
+    .queue-list { display: flex; flex-direction: column; gap: 12px; }
+    .q-item {
+      background: #fff;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .q-page { font-size: 14px; font-weight: 800; color: #0E2A2F; }
+    .q-caption { font-size: 12px; color: #64748B; margin: 4px 0 8px; line-height: 1.4; word-break: break-word; }
+    .q-time-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: #EFF6FF;
+      color: #1E40AF;
+      font-weight: 700;
+    }
+    .q-jitter-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: #DCFCE7;
+      color: #15803D;
+      font-weight: 700;
+      margin-left: 6px;
+    }
+    .btn-cancel {
+      background: #FEE2E2;
+      color: #DC2626;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-cancel:hover { background: #FCA5A5; }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #94A3B8;
+      font-size: 13px;
+      border: 2px dashed #E2E8F0;
+      border-radius: 12px;
+      background: #F8FAFC;
+    }
+
+    @media (max-width: 980px) {
+      .grid-container { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR (100% Dedicated Facebook Navigation) -->
+  <aside class="sidebar">
+    <a class="logo-box" href="/dashboard.html">
+      <div class="logo-badge">f</div>
+      <span>PostFlow</span>
+    </a>
+
+    <!-- FACEBOOK SECTION -->
+    <div class="nav-label">Facebook</div>
+    <a class="nav-item" href="/dashboard.html">
+      <div class="nav-item-left"><span>📊 Dashboard</span></div>
+    </a>
+    <a class="nav-item" href="/connect-app.html">
+      <div class="nav-item-left"><span>🔑 App settings</span></div>
+    </a>
+
+    <!-- POSTING SECTION -->
+    <div class="nav-label">Posting</div>
+    <a class="nav-item" href="/media-library.html">
+      <div class="nav-item-left"><span>📁 Media library</span></div>
+    </a>
+    <a class="nav-item" href="/direct-post.html">
+      <div class="nav-item-left"><span>🚀 Post now</span></div>
+    </a>
+
+    <!-- AUTOMATION SECTION -->
+    <div class="nav-label">Automation</div>
+    <a class="nav-item" href="/auto-upload.html">
+      <div class="nav-item-left"><span>⬇️ Auto download & upload</span></div>
+    </a>
+    <a class="nav-item active" href="/schedule.html">
+      <div class="nav-item-left"><span>📅 Schedule</span></div>
+    </a>
+
+    <!-- USER FOOTER -->
+    <div class="user-footer">
+      <div class="user-email" id="sidebarEmail">danisahib0@gmail.com</div>
+      <a class="user-change-btn" href="/dashboard.html">Return to Dashboard</a>
+    </div>
+  </aside>
+
+  <!-- MAIN VIEW -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h2>Smart Human-Safe Scheduler</h2>
+        <div class="sub">Schedule Facebook posts with natural randomized intervals to avoid bot detection</div>
+      </div>
+      <div style="font-size: 13px; color: #64748B;">
+        <span id="userBadge">danisahib0@gmail.com</span>
+      </div>
+    </div>
+
+    <div class="grid-container">
+      <!-- FORM CARD -->
+      <div class="card">
+        <div class="card-title">⏰ Schedule New Post</div>
+        <div class="card-desc">Set your target schedule time. PostFlow simulates natural human posting times automatically.</div>
+
+        <form id="schedForm" onsubmit="handleSchedule(event)">
+          <div class="field">
+            <label>Select Target Facebook Page</label>
+            <select id="pageSelect" required>
+              <option value="">Loading your Facebook Pages...</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Video or Reel URL (TikTok / Reels / YouTube)</label>
+            <input type="url" id="vUrl" placeholder="https://www.tiktok.com/@user/video/... or direct video link" required>
+          </div>
+
+          <div class="field">
+            <label>Post Caption & Hashtags</label>
+            <textarea id="caption" rows="3" placeholder="Enter caption, hashtags, and description..."></textarea>
+          </div>
+
+          <div class="field">
+            <label>Base Target Time</label>
+            <input type="datetime-local" id="schedTime" onchange="updateJitterPreview()" required>
+          </div>
+
+          <!-- HUMAN SAFE JITTER CONTROL -->
+          <div class="human-safety-box">
+            <div class="safety-header">
+              <span class="safety-title">
+                🛡️ Human-Safe Jitter Engine (Anti-Bot)
+              </span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="jitterToggle" checked onchange="updateJitterPreview()">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="safety-desc">
+              Agar aap theek <strong>12:00</strong> baje set karenge, to ye tool Facebook algorithm se bachane ke liye randomly <strong>12:03 ya 12:05</strong> par naturally post karega taakay Meta ko lage k ek live insan post kar raha hai.
+            </div>
+            <div class="jitter-preview" id="jitterDisplay">
+              <span>🎲 Simulated Post Time:</span>
+              <span id="jitterCalculatedTime" style="color: #16A34A; font-weight: 800;">12:04 PM (+4m jitter)</span>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit">
+            <span>🛡️ Schedule with Human-Safe Protection</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- QUEUE CARD -->
+      <div class="card">
+        <div class="card-title" style="justify-content: space-between;">
+          <span>🗓️ Scheduled Queue</span>
+          <span id="queueBadge" style="font-size: 11px; background: #EFF6FF; color: #1877F2; padding: 4px 10px; border-radius: 12px; font-weight: 800;">0 Queued</span>
+        </div>
+        <div class="card-desc">Upcoming posts waiting for execution with their humanized execution slots.</div>
+
+        <div id="queueList" class="queue-list">
+          <div class="empty-state">No scheduled posts yet. Fill the form to add your first post.</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const FB_PAGES_KEY = 'postflow_fb_pages';
+    const SCHED_QUEUE_KEY = 'pf_scheduled_queue';
+    const ACC_EMAIL_KEY = 'postflow_user_email';
+
+    let currentCalculatedJitter = 4;
+
+    // Load initial date (1 hour ahead default)
+    function initDefaultDate() {
+      const now = new Date();
+      now.setHours(now.getHours() + 1);
+      now.setMinutes(0);
+      const iso = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      document.getElementById('schedTime').value = iso;
+      updateJitterPreview();
+    }
+
+    function updateJitterPreview() {
+      const dateVal = document.getElementById('schedTime').value;
+      const isJitterActive = document.getElementById('jitterToggle').checked;
+      const display = document.getElementById('jitterCalculatedTime');
+
+      if (!dateVal) return;
+
+      const baseDate = new Date(dateVal);
+
+      if (!isJitterActive) {
+        currentCalculatedJitter = 0;
+        display.innerHTML = `<span style="color:#64748B;">Exact: ${formatTime(baseDate)} (No Jitter)</span>`;
+        return;
+      }
+
+      // Generate realistic natural human jitter: random 2 to 5 minutes
+      if (!currentCalculatedJitter || currentCalculatedJitter === 0) {
+        currentCalculatedJitter = Math.floor(Math.random() * 4) + 2; // 2, 3, 4, or 5 mins
+      }
+
+      const humanDate = new Date(baseDate.getTime() + currentCalculatedJitter * 60000);
+      display.innerHTML = `<span style="color:#16A34A; font-weight:800;">${formatTime(humanDate)} (+${currentCalculatedJitter}m human delay)</span>`;
+    }
+
+    function formatTime(d) {
+      return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' on ' + d.toLocaleDateString();
+    }
+
+    function loadPages() {
+      const pages = JSON.parse(localStorage.getItem(FB_PAGES_KEY) || '[]');
+      const sel = document.getElementById('pageSelect');
+
+      if (pages.length === 0) {
+        sel.innerHTML = '<option value="">No Facebook pages connected. Add a page in Dashboard first.</option>';
+      } else {
+        sel.innerHTML = '<option value="">Select Target Facebook Page...</option>' + pages.map(p => `
+          <option value="${escapeHtml(p.name)}" data-id="${escapeHtml(p.id)}">📄 ${escapeHtml(p.name)} (${escapeHtml(p.id)})</option>
+        `).join('');
+      }
+    }
+
+    function renderQueue() {
+      const queue = JSON.parse(localStorage.getItem(SCHED_QUEUE_KEY) || '[]');
+      const qList = document.getElementById('queueList');
+      const badge = document.getElementById('queueBadge');
+      badge.innerText = `${queue.length} Queued`;
+
+      if (queue.length === 0) {
+        qList.innerHTML = '<div class="empty-state">No scheduled posts yet. Fill the form to add your first post.</div>';
+        return;
+      }
+
+      qList.innerHTML = queue.map((job, idx) => `
+        <div class="q-item">
+          <div style="flex: 1;">
+            <div class="q-page">📄 ${escapeHtml(job.pageName)}</div>
+            <div class="q-caption">${escapeHtml(job.caption || 'No caption entered')}</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
+              <span class="q-time-tag">🎯 Target: ${escapeHtml(job.targetTime)}</span>
+              ${job.humanTime ? `<span class="q-jitter-tag">🛡️ Humanized: ${escapeHtml(job.humanTime)}</span>` : ''}
+            </div>
+          </div>
+          <button class="btn-cancel" onclick="cancelJob(${idx})">✕ Cancel</button>
+        </div>
+      `).join('');
+    }
+
+    function handleSchedule(e) {
+      e.preventDefault();
+      const pageSelect = document.getElementById('pageSelect');
+      const pageName = pageSelect.value;
+      const vUrl = document.getElementById('vUrl').value.trim();
+      const caption = document.getElementById('caption').value.trim();
+      const baseTimeStr = document.getElementById('schedTime').value;
+      const isJitterActive = document.getElementById('jitterToggle').checked;
+
+      if (!pageName) {
+        alert('Please select a Facebook Page first.');
+        return;
+      }
+
+      const baseDate = new Date(baseTimeStr);
+      let humanDate = baseDate;
+      let jitterMins = 0;
+
+      if (isJitterActive) {
+        jitterMins = currentCalculatedJitter || (Math.floor(Math.random() * 4) + 2);
+        humanDate = new Date(baseDate.getTime() + jitterMins * 60000);
+      }
+
+      const newJob = {
+        id: 'job_' + Date.now(),
+        pageName,
+        videoUrl: vUrl,
+        caption,
+        baseTimeISO: baseTimeStr,
+        targetTime: formatTime(baseDate),
+        humanTime: isJitterActive ? formatTime(humanDate) : null,
+        jitterMinutes: jitterMins,
+        status: 'Queued',
+        createdAt: new Date().toLocaleDateString()
+      };
+
+      const queue = JSON.parse(localStorage.getItem(SCHED_QUEUE_KEY) || '[]');
+      queue.unshift(newJob);
+      localStorage.setItem(SCHED_QUEUE_KEY, JSON.stringify(queue));
+
+      // Also record in Dashboard posts as scheduled
+      const FB_POSTS_KEY = 'postflow_fb_posts';
+      const fbPosts = JSON.parse(localStorage.getItem(FB_POSTS_KEY) || '[]');
+      fbPosts.unshift({
+        text: caption || 'Scheduled Video Post: ' + vUrl,
+        pageName,
+        date: isJitterActive ? `Scheduled for ${formatTime(humanDate)} (Human-Safe)` : `Scheduled for ${formatTime(baseDate)}`,
+        status: 'Scheduled'
+      });
+      localStorage.setItem(FB_POSTS_KEY, JSON.stringify(fbPosts));
+
+      alert(`✅ Post successfully scheduled with Human-Safe Protection!\n\nTarget Time: ${formatTime(baseDate)}\nActual Human Execution: ${formatTime(humanDate)} (+${jitterMins}m safe delay)`);
+
+      document.getElementById('vUrl').value = '';
+      document.getElementById('caption').value = '';
+      currentCalculatedJitter = Math.floor(Math.random() * 4) + 2;
+      updateJitterPreview();
+      renderQueue();
+    }
+
+    function cancelJob(idx) {
+      if (confirm('Are you sure you want to cancel this scheduled post?')) {
+        const queue = JSON.parse(localStorage.getItem(SCHED_QUEUE_KEY) || '[]');
+        queue.splice(idx, 1);
+        localStorage.setItem(SCHED_QUEUE_KEY, JSON.stringify(queue));
+        renderQueue();
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+      });
+    }
+
+    window.onload = function() {
+      const email = localStorage.getItem(ACC_EMAIL_KEY) || 'danisahib0@gmail.com';
+      document.getElementById('sidebarEmail').innerText = email;
+      document.getElementById('userBadge').innerText = email;
+
+      initDefaultDate();
+      loadPages();
+      renderQueue();
+    };
+  </script>
+</body>
+</html>

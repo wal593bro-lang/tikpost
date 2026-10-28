@@ -1,0 +1,1403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Media library · PostFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  :root {
+    --ink: #0e2a2f;
+    --card: #ffffff;
+    --line: #e2e8f0;
+    --paper: #f4f6fa;
+    --muted: #64748b;
+    --radius: 12px;
+    --bad: #ef4444;
+    --primary: #1877f2;
+    --primary-hover: #166fe5;
+    --success: #16a34a;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 20px; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 13px; }
+  .topbar a.js-signout { color: var(--primary); font-weight: 600; text-decoration: none; }
+  .page-head h1 { font-family: 'Bricolage Grotesque', sans-serif; font-size: 28px; font-weight: 800; margin: 4px 0 6px; color: var(--ink); }
+  .page-head p { margin: 0; color: var(--muted); font-size: 14px; }
+  .crumb { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--muted); letter-spacing: 0.5px; }
+
+  /* Notification Banner / Tips */
+  .tip-box {
+    margin-top: 16px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: #1e3a8a;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .tip-box strong { font-weight: 700; }
+  .tip-box a { color: var(--primary); font-weight: 700; text-decoration: underline; }
+
+  /* Dropzone */
+  .drop {
+    margin-top: 16px;
+    border: 2px dashed #94a3b8;
+    border-radius: var(--radius);
+    background: var(--card);
+    padding: 26px 20px;
+    text-align: center;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+  }
+  .drop:hover { border-color: var(--primary); background: #fafcff; }
+  .drop.drag { border-color: var(--primary); background: #eff6ff; transform: scale(1.005); }
+  .drop-title { font-size: 17px; font-weight: 800; color: var(--ink); margin-bottom: 5px; }
+  .drop-sub { font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.4; }
+  .drop-actions { display: flex; gap: 12px; justify-content: center; align-items: center; flex-wrap: wrap; }
+
+  .up-badge {
+    background: #e0f2fe;
+    color: #0284c7;
+    border: 1px solid #bae6fd;
+    border-radius: 99px;
+    padding: 3px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-block;
+    margin-bottom: 8px;
+    letter-spacing: 0.3px;
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all .15s;
+    user-select: none;
+  }
+  .btn.secondary { background: var(--card); border-color: var(--line); color: var(--ink); }
+  .btn.secondary:hover { background: #f8fafc; border-color: #cbd5e1; }
+  .btn.primary { background: var(--primary); color: #fff; box-shadow: 0 2px 6px rgba(24,119,242,.3); }
+  .btn.primary:hover { background: var(--primary-hover); }
+  .btn.danger { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
+  .btn.danger:hover { background: #fecaca; color: #991b1b; }
+
+  /* Progress rows */
+  .up {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-top: 8px;
+    font-size: 13px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.03);
+  }
+  .up .nm { flex: 0 1 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; color: var(--ink); }
+  .up .bar { flex: 1; height: 7px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
+  .up .bar > div { height: 100%; width: 0; background: var(--primary); transition: width .2s ease; }
+  .up .pc { font-family: monospace; font-size: 12px; font-weight: 700; min-width: 48px; text-align: right; color: var(--ink); }
+
+  /* Toolbar */
+  .bar-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 20px; }
+  .bar-row .input {
+    flex: 1;
+    min-width: 220px;
+    max-width: 360px;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font-size: 13px;
+    outline: none;
+    background: #fff;
+    transition: border-color .15s;
+  }
+  .bar-row .input:focus { border-color: var(--primary); }
+
+  /* Chips Container & Chip Items */
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; align-items: center; }
+  
+  .chip-all {
+    border: 1.5px solid var(--line);
+    background: var(--card);
+    border-radius: 99px;
+    padding: 7px 16px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .chip-all:hover { border-color: var(--ink); color: var(--ink); }
+  .chip-all.on { border-color: var(--ink); color: var(--ink); background: #e2e8f0; font-weight: 700; }
+
+  .chip-item {
+    display: inline-flex;
+    align-items: center;
+    background: var(--card);
+    border: 1.5px solid var(--line);
+    border-radius: 99px;
+    padding: 3px 5px 3px 14px;
+    transition: all .15s;
+  }
+  .chip-item:hover { border-color: #94a3b8; }
+  .chip-item.on {
+    border-color: var(--ink);
+    background: #eef3f5;
+  }
+  .chip-item .chip-click {
+    background: none;
+    border: none;
+    padding: 4px 6px 4px 0;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chip-item.on .chip-click { color: var(--ink); font-weight: 700; }
+  .chip-item .chip-del {
+    background: #f1f5f9;
+    border: none;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: #64748b;
+    cursor: pointer;
+    transition: all .15s;
+    margin-left: 2px;
+  }
+  .chip-item .chip-del:hover { background: #fee2e2; color: #dc2626; }
+
+  /* Media Grid */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-top: 18px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    display: flex;
+    flex-direction: column;
+    transition: transform .15s, box-shadow .15s;
+    cursor: pointer;
+  }
+  .card:hover { transform: translateY(-3px); box-shadow: 0 6px 16px rgba(0,0,0,.08); }
+  .card .th {
+    aspect-ratio: 16/9;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .card img, .card video { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+  .card .play-badge {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,.25);
+    transition: background .15s;
+  }
+  .card:hover .play-badge { background: rgba(0,0,0,.1); }
+  .card .play-btn-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(24,119,242,.9);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    padding-left: 3px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.4);
+    transition: transform .15s;
+  }
+  .card:hover .play-btn-circle { transform: scale(1.1); background: var(--primary); }
+
+  .card .bd { padding: 12px 14px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+  .card .nm { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink); line-height: 1.4; }
+  .card .mt { font-size: 11px; color: var(--muted); margin-top: 4px; font-family: monospace; display: flex; justify-content: space-between; }
+  .card .del {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    border: 0;
+    background: rgba(14,42,47,.8);
+    color: #fff;
+    border-radius: 8px;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    transition: background .15s;
+    z-index: 5;
+  }
+  .card .del:hover { background: #ef4444; }
+
+  /* VIDEO PLAYER & CAPTION MODAL */
+  #videoModal {
+    position: fixed;
+    inset: 0;
+    background: rgba(14, 42, 47, 0.85);
+    backdrop-filter: blur(5px);
+    z-index: 50000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .video-modal-card {
+    background: #ffffff;
+    border-radius: 18px;
+    width: 100%;
+    max-width: 760px;
+    max-height: 94vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.35);
+    display: flex;
+    flex-direction: column;
+    animation: modalPop .2s ease-out;
+  }
+  @keyframes modalPop {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .vm-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .vm-title {
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-right: 12px;
+  }
+  .vm-close {
+    background: #f1f5f9;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .15s;
+    flex-shrink: 0;
+  }
+  .vm-close:hover { background: #fee2e2; color: #dc2626; }
+  .vm-player-wrap {
+    background: #000;
+    width: 100%;
+    max-height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .vm-player-wrap video {
+    width: 100%;
+    max-height: 60vh;
+    object-fit: contain;
+  }
+  .vm-body {
+    padding: 18px 20px 22px;
+  }
+  .vm-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .vm-caption-box {
+    display: flex;
+    gap: 12px;
+    background: #f8fafc;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 14px;
+    align-items: center;
+  }
+  .vm-caption-text {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.4;
+    word-break: break-word;
+  }
+  .vm-meta {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* FULL-SCREEN DRAG OVERLAY */
+  #globalDropOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(14, 42, 47, 0.88);
+    backdrop-filter: blur(5px);
+    z-index: 99999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+  #globalDropOverlay .drop-modal {
+    background: #ffffff;
+    border: 3px dashed var(--primary);
+    border-radius: 24px;
+    padding: 48px 40px;
+    text-align: center;
+    box-shadow: 0 25px 60px rgba(0,0,0,.35);
+    max-width: 540px;
+    animation: dropPulse 1.2s infinite alternate ease-in-out;
+  }
+  @keyframes dropPulse {
+    from { transform: scale(0.97); }
+    to { transform: scale(1.02); }
+  }
+
+  #toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: #fff;
+    padding: 12px 22px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    display: none;
+    z-index: 20000;
+    box-shadow: 0 10px 30px rgba(0,0,0,.3);
+  }
+</style>
+</head>
+<body data-page="media-library">
+
+<!-- Full-page Drop Overlay -->
+<div id="globalDropOverlay">
+  <div class="drop-modal">
+    <div style="font-size: 56px; margin-bottom: 12px;">📥</div>
+    <div style="font-size: 22px; font-weight: 800; color: #0e2a2f;">Drop Creator Folder or Files Here!</div>
+    <div style="font-size: 14px; color: #64748b; margin-top: 8px; line-height: 1.5;">
+      Yahan drop karein! Folder automatically ban jayega aur videos upload ho jayengi.
+    </div>
+  </div>
+</div>
+
+<!-- Video Player Modal -->
+<div id="videoModal">
+  <div class="video-modal-card">
+    <div class="vm-header">
+      <div class="vm-title" id="vmTitle">🎬 Video Player</div>
+      <button type="button" class="vm-close" id="vmClose" title="Close player">✕</button>
+    </div>
+    <div class="vm-player-wrap">
+      <video id="vmVideo" controls autoplay playsinline></video>
+    </div>
+    <div class="vm-body">
+      <div class="vm-label">Video Title / Auto Caption:</div>
+      <div class="vm-caption-box">
+        <div id="vmCaptionText" class="vm-caption-text"></div>
+        <button type="button" class="btn primary" id="vmCopyBtn">
+          <span>📋</span>
+          <span>Copy Caption</span>
+        </button>
+      </div>
+      <div class="vm-meta">
+        <span id="vmFileInfo"></span>
+        <button type="button" class="btn secondary" id="vmDownloadBtn" style="padding:6px 12px;font-size:12px;">
+          <span>⬇️</span>
+          <span>Download Video</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<main class="main"><div class="wrap">
+  <div class="topbar">
+    <span class="who"><span data-user-email></span></span>
+    <a href="#" class="js-signout">Sign out</a>
+  </div>
+  
+  <header class="page-head">
+    <div>
+      <div class="crumb">Posting</div>
+      <h1>Media library</h1>
+      <p>Upload videos, photos, or entire creator folders. Click any video card to play it with full sound and copy its caption.</p>
+    </div>
+  </header>
+
+  <!-- Helpful notice with direct auto-post link -->
+  <div class="tip-box">
+    <div>
+      <strong>💡 Video Play Tip:</strong> 
+      Aap kisi bhi video card par click karke use poore sound aur controls ke sath live play kar sakte hain aur uska caption 1-click mein copy kar sakte hain!
+    </div>
+    <a href="auto-post.html">Go to Auto-post →</a>
+  </div>
+
+  <!-- UPGRADED DROPZONE -->
+  <div class="drop" id="drop" tabindex="0" role="region" aria-label="Media upload dropzone">
+    <span class="up-badge">✨ Drag & Drop or 1-Click Folder Upload</span>
+    <div class="drop-title">Drop your files or an entire folder here</div>
+    <div class="drop-sub">Drag & drop files/folders here, or click the buttons below to browse your computer.</div>
+    
+    <div class="drop-actions">
+      <!-- Button 1: Single or Multiple Files -->
+      <button type="button" class="btn secondary" id="btnUploadFiles">
+        <span>📄</span>
+        <span>Upload Files (Multiple)</span>
+      </button>
+
+      <!-- Button 2: Whole Folder Upload -->
+      <button type="button" class="btn primary" id="btnUploadFolder">
+        <span>📁</span>
+        <span>Upload Entire Folder</span>
+      </button>
+    </div>
+
+    <!-- Hidden file inputs -->
+    <input type="file" id="fileIn" multiple accept=".mp4,.mov,.m4v,.webm,.mkv,.avi,.flv,.wmv,.ts,.3gp,.jpg,.jpeg,.png,.webp,.gif" hidden>
+    <input type="file" id="folderIn" webkitdirectory directory multiple hidden>
+  </div>
+
+  <div id="ups"></div>
+
+  <!-- Action Bar: Search, New Folder, Prominent Folder Delete, and Clear All Videos Button -->
+  <div class="bar-row">
+    <input class="input" id="q" type="search" placeholder="Search by file name or caption..." aria-label="Search">
+    <button class="btn secondary" id="newFolder" type="button">＋ New folder</button>
+    
+    <!-- Prominent Folder Delete Button (Shows when a folder is selected) -->
+    <button class="btn danger" id="delFolder" type="button" style="display:none;">
+      <span>🗑️</span>
+      <span id="delFolderLabel">Delete folder & all its videos</span>
+    </button>
+
+    <!-- Clear All Videos button -->
+    <button class="btn danger" id="clearAllBtn" type="button" style="display:none;margin-left:auto;">
+      <span>🗑️</span>
+      <span>Clear All (<span id="clearCount">0</span>) Videos</span>
+    </button>
+  </div>
+
+  <!-- Chips row with All Media and Folders (with individual ✕ delete buttons) -->
+  <div class="chips" id="chips"></div>
+
+  <!-- Media Grid -->
+  <div class="grid" id="grid"></div>
+</div></main>
+
+<div id="toast" role="status"></div>
+
+<script src="js/layout.js"></script>
+<script>
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const mb = n => n > 1048576 ? (n/1048576).toFixed(1) + ' MB' : Math.max(1, Math.round(n/1024)) + ' KB';
+  
+  function toast(m){ 
+    const t=$('toast'); 
+    t.textContent=m; 
+    t.style.display='block'; 
+    clearTimeout(toast.h); 
+    toast.h=setTimeout(()=>t.style.display='none',3600); 
+  }
+
+  // =========================================================================
+  // INDEXED-DB VIDEO BLOB CACHE (Stores full video files so they always play)
+  // =========================================================================
+  const idbPromise = new Promise((resolve) => {
+    try {
+      const req = indexedDB.open('PostFlowMediaDB_v2', 1);
+      req.onupgradeneeded = e => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains('blobs')) {
+          db.createObjectStore('blobs', { keyPath: 'name' });
+        }
+      };
+      req.onsuccess = e => resolve(e.target.result);
+      req.onerror = () => resolve(null);
+    } catch(e) {
+      resolve(null);
+    }
+  });
+
+  async function storeBlob(name, blob) {
+    try {
+      const db = await idbPromise;
+      if (!db) return;
+      const tx = db.transaction('blobs', 'readwrite');
+      tx.objectStore('blobs').put({ name, blob });
+    } catch(e) {}
+  }
+
+  async function getStoredBlob(name) {
+    try {
+      const db = await idbPromise;
+      if (!db) return null;
+      return new Promise(resolve => {
+        const tx = db.transaction('blobs', 'readonly');
+        const req = tx.objectStore('blobs').get(name);
+        req.onsuccess = () => resolve(req.result ? req.result.blob : null);
+        req.onerror = () => resolve(null);
+      });
+    } catch(e) {
+      return null;
+    }
+  }
+
+  async function removeStoredBlob(name) {
+    try {
+      const db = await idbPromise;
+      if (!db) return;
+      const tx = db.transaction('blobs', 'readwrite');
+      tx.objectStore('blobs').delete(name);
+    } catch(e) {}
+  }
+
+  // In-memory active blob object URLs mapping
+  const memoryBlobUrls = new Map();
+
+  async function resolveMediaUrl(item) {
+    if (!item) return '';
+    if (memoryBlobUrls.has(item.name)) {
+      return memoryBlobUrls.get(item.name);
+    }
+    if (item.url && item.url.startsWith('blob:')) {
+      return item.url;
+    }
+    // Check IndexedDB
+    const blob = await getStoredBlob(item.name);
+    if (blob) {
+      const u = URL.createObjectURL(blob);
+      memoryBlobUrls.set(item.name, u);
+      return u;
+    }
+    return item.url || `/media/${item.id}`;
+  }
+
+  // Fallback API handler if layout.js is missing or in mock mode
+  if (typeof window.api !== 'function') {
+    window.api = async function(url, opts = {}) {
+      const res = await fetch(url, {
+        headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
+        ...opts,
+        body: opts.body ? JSON.stringify(opts.body) : undefined
+      });
+      if (!res.ok) {
+        let errText = 'API error';
+        try { const d = await res.json(); errText = d.error || d.message || errText; } catch {}
+        throw new Error(errText);
+      }
+      return res.json();
+    };
+  }
+
+  let media = [], folders = [], folder = null;
+
+  function isMediaFile(name) {
+    return /\.(mp4|mov|m4v|webm|mkv|avi|flv|wmv|ts|3gp|jpg|jpeg|png|webp|gif|heic)$/i.test(name);
+  }
+
+  function getItemFolderId(item) {
+    if (!item) return null;
+    const val = item.folderId !== undefined ? item.folderId : (item.folder_id !== undefined ? item.folder_id : item.folder);
+    return val !== undefined && val !== null ? String(val) : null;
+  }
+
+  async function load(targetFolderToPreserve = null){
+    try { 
+      const [apiMedia, apiFolders] = await Promise.all([api('/api/media'), api('/api/folders')]); 
+      if (Array.isArray(apiMedia)) media = apiMedia;
+      if (Array.isArray(apiFolders)) folders = apiFolders;
+    } catch(e){ 
+      try {
+        const savedM = localStorage.getItem('postflow_media');
+        const savedF = localStorage.getItem('postflow_folders');
+        if (savedM) media = JSON.parse(savedM);
+        if (savedF) folders = JSON.parse(savedF);
+      } catch {}
+    }
+
+    // Merge any locally cached media items
+    try {
+      const savedM = localStorage.getItem('postflow_media');
+      if (savedM) {
+        const localList = JSON.parse(savedM);
+        localList.forEach(loc => {
+          if (!media.some(m => String(m.id) === String(loc.id))) {
+            media.unshift(loc);
+          }
+        });
+      }
+    } catch {}
+
+    if (targetFolderToPreserve !== null) {
+      folder = targetFolderToPreserve;
+    } else if (folder !== null) {
+      const exists = folders.some(f => String(f.id) === String(folder));
+      if (!exists) folder = null;
+    }
+
+    // Pre-resolve media URLs from IndexedDB
+    for (const m of media) {
+      if (!memoryBlobUrls.has(m.name)) {
+        await resolveMediaUrl(m);
+      }
+    }
+
+    draw();
+  }
+
+  async function loadFoldersOnly(){
+    try {
+      const res = await api('/api/folders');
+      if (Array.isArray(res)) folders = res;
+      else if (res && Array.isArray(res.folders)) folders = res.folders;
+    } catch(e){}
+  }
+
+  function draw(){
+    // Render Folder Chips with dedicated ✕ delete buttons
+    const allMediaBtn = `<button class="chip-all ${folder===null?'on':''}" data-f="">All media (${media.length})</button>`;
+    
+    const folderChips = folders.map(f => {
+      const fIdStr = String(f.id);
+      const fMedia = media.filter(m => getItemFolderId(m) === fIdStr);
+      const vCount = fMedia.filter(m => m.type === 'video' || /\.(mp4|mov|m4v|webm|mkv|avi)$/i.test(m.name)).length;
+      const pCount = fMedia.filter(m => m.type !== 'video' && !/\.(mp4|mov|m4v|webm|mkv|avi)$/i.test(m.name)).length;
+      const isSelected = folder !== null && String(folder) === fIdStr;
+      
+      return `
+        <div class="chip-item ${isSelected ? 'on' : ''}">
+          <button type="button" class="chip-click" data-f="${esc(f.id)}" title="Open folder '${esc(f.name)}'">
+            <span>📁</span>
+            <span>${esc(f.name)}</span>
+            <span style="font-size:11px;opacity:0.75">(${vCount} v, ${pCount} p)</span>
+          </button>
+          <button type="button" class="chip-del" data-del-f="${esc(f.id)}" title="Delete folder '${esc(f.name)}' & all its videos">✕</button>
+        </div>
+      `;
+    }).join('');
+
+    $('chips').innerHTML = allMediaBtn + folderChips;
+    
+    // Update prominent delete folder button
+    const delBtn = $('delFolder');
+    if (folder !== null) {
+      const currentFolderObj = folders.find(f => String(f.id) === String(folder));
+      const fName = currentFolderObj ? currentFolderObj.name : 'Folder';
+      $('delFolderLabel').textContent = `Delete Folder "${fName}" & Videos`;
+      delBtn.style.display = 'inline-flex';
+    } else {
+      delBtn.style.display = 'none';
+    }
+
+    const q = $('q').value.trim().toLowerCase();
+
+    // Filter media by active folder and search query
+    const list = media.filter(m => {
+      if (folder !== null) {
+        const mFolder = getItemFolderId(m);
+        if (mFolder !== String(folder)) return false;
+      }
+      if (q && !m.name.toLowerCase().includes(q)) return false;
+      return true;
+    });
+
+    // Update Clear All Videos button
+    const clearBtn = $('clearAllBtn');
+    if (list.length > 0) {
+      clearBtn.style.display = 'inline-flex';
+      $('clearCount').textContent = list.length;
+    } else {
+      clearBtn.style.display = 'none';
+    }
+    
+    $('grid').innerHTML = list.length ? list.map(m => {
+      const isVideo = m.type === 'video' || /\.(mp4|mov|m4v|webm|mkv|avi)$/i.test(m.name);
+      const mediaSrc = memoryBlobUrls.get(m.name) || m.url || `/media/${m.id}`;
+      return `
+        <div class="card" data-id="${esc(m.id)}" data-name="${esc(m.name)}" title="Click to play video and copy caption">
+          <div class="th">
+            ${isVideo
+              ? `<video src="${esc(mediaSrc)}" preload="metadata" muted playsinline></video>
+                 <div class="play-badge"><div class="play-btn-circle">▶</div></div>`
+              : `<img src="${esc(mediaSrc)}" alt="" onerror="this.style.display='none';this.parentElement.innerHTML='<div style=\\'font-size:36px\\'>🖼️</div>';">`
+            }
+          </div>
+          <div class="bd">
+            <div class="nm" title="${esc(m.name)}">${esc(m.name)}</div>
+            <div class="mt">
+              <span>${isVideo ? '🎬 VIDEO' : '🖼️ IMAGE'}</span>
+              <span>${mb(m.size || (m.sizeMB ? m.sizeMB * 1048576 : 15728640))}</span>
+            </div>
+          </div>
+          <button class="del" title="Delete this video" aria-label="Delete media">✕</button>
+        </div>
+      `;
+    }).join('') : `<div style="grid-column:1/-1;text-align:center;padding:54px 16px;color:var(--muted);background:#fff;border-radius:12px;border:1px dashed var(--line)">
+      <div style="font-size:36px;margin-bottom:8px">📂</div>
+      <div style="font-weight:700;font-size:15px;color:var(--ink);margin-bottom:4px">
+        ${folder !== null ? 'Is folder mein koi media nahi hai' : 'Media Library is empty'}
+      </div>
+      <div>Upar se "Upload Entire Folder" ya "Upload Files" dabayein taake videos upload ho jayein!</div>
+    </div>`;
+  }
+
+  // =========================================================================
+  // VIDEO PLAYER MODAL LOGIC
+  // =========================================================================
+  const videoModal = $('videoModal');
+  const vmVideo = $('vmVideo');
+  const vmTitle = $('vmTitle');
+  const vmCaptionText = $('vmCaptionText');
+  const vmFileInfo = $('vmFileInfo');
+  const vmClose = $('vmClose');
+  const vmCopyBtn = $('vmCopyBtn');
+  const vmDownloadBtn = $('vmDownloadBtn');
+  let currentActiveItem = null;
+
+  // Helper to extract clean caption without file extension or TikTok/yt-dlp ID brackets
+  function extractCleanCaption(filename) {
+    if (!filename) return '';
+    let s = filename.replace(/\.[a-z0-9]+$/i, '');
+    // Remove bracketed IDs like [7698593293067701525] or [dQw4w9WgXcQ]
+    s = s.replace(/\s*\[[a-zA-Z0-9_-]{5,}\]\s*$/g, '');
+    s = s.replace(/\s*\[\d+\]\s*$/g, '');
+    // Remove trailing long numeric IDs like -7698593293067701525
+    s = s.replace(/[-_]\d{10,}\s*$/g, '');
+    return s.trim();
+  }
+
+  async function openVideoModal(item) {
+    if (!item) return;
+    currentActiveItem = item;
+
+    const cleanTitle = extractCleanCaption(item.name);
+    vmTitle.textContent = `🎬 ${item.name}`;
+    vmCaptionText.textContent = cleanTitle;
+    vmFileInfo.textContent = `Size: ${mb(item.size || 15728640)} · Format: ${item.name.split('.').pop().toUpperCase()}`;
+
+    const playSrc = await resolveMediaUrl(item);
+    vmVideo.src = playSrc;
+    vmVideo.load();
+    vmVideo.play().catch(() => {});
+
+    videoModal.style.display = 'flex';
+  }
+
+  function closeVideoModal() {
+    vmVideo.pause();
+    vmVideo.src = '';
+    videoModal.style.display = 'none';
+  }
+
+  vmClose.onclick = closeVideoModal;
+  videoModal.onclick = e => {
+    if (e.target === videoModal) closeVideoModal();
+  };
+
+  vmCopyBtn.onclick = () => {
+    if (!currentActiveItem) return;
+    const cleanTitle = extractCleanCaption(currentActiveItem.name);
+    navigator.clipboard.writeText(cleanTitle).then(() => {
+      toast('✅ Clean caption (without ID number) copied!');
+    }).catch(() => {
+      toast('Copied: ' + cleanTitle);
+    });
+  };
+
+  vmDownloadBtn.onclick = async () => {
+    if (!currentActiveItem) return;
+    const src = await resolveMediaUrl(currentActiveItem);
+    const a = document.createElement('a');
+    a.href = src;
+    a.download = currentActiveItem.name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
+  // Card click handler: Clicking card plays the video in modal!
+  $('grid').onclick = async e => {
+    const delBtn = e.target.closest('.del');
+    const card = e.target.closest('.card');
+    if (!card) return;
+
+    const id = card.dataset.id;
+    const name = card.dataset.name;
+
+    // If delete button was clicked
+    if (delBtn) {
+      e.stopPropagation();
+      if (!confirm(`Delete "${name}"?`)) return;
+      try { await api(`/api/media/${id}`, { method: 'DELETE' }); } catch(err) {}
+      await removeStoredBlob(name);
+      media = media.filter(m => String(m.id) !== String(id));
+      try { localStorage.setItem('postflow_media', JSON.stringify(media)); } catch {}
+      draw();
+      toast('File deleted.');
+      return;
+    }
+
+    // Otherwise, open video modal to play!
+    const item = media.find(m => String(m.id) === String(id) || m.name === name);
+    if (item) {
+      openVideoModal(item);
+    }
+  };
+
+  // FOLDER DELETION FUNCTION (Deletes Folder AND all videos inside it)
+  async function performDeleteFolder(folderId) {
+    const cur = folders.find(f => String(f.id) === String(folderId));
+    if (!cur) return;
+
+    const fMedia = media.filter(m => getItemFolderId(m) === String(folderId));
+    const msg = fMedia.length > 0 
+      ? `Kya aap folder "${cur.name}" aur iske andar ki tamam (${fMedia.length}) videos ko delete karna chahte hain?`
+      : `Delete folder "${cur.name}"?`;
+
+    if (!confirm(msg)) return;
+
+    // 1. Delete all videos inside this folder from server, IndexedDB & client
+    if (fMedia.length > 0) {
+      for (const item of fMedia) {
+        try { await api(`/api/media/${item.id}`, { method: 'DELETE' }); } catch(e) {}
+        await removeStoredBlob(item.name);
+      }
+      media = media.filter(m => getItemFolderId(m) !== String(folderId));
+      try { localStorage.setItem('postflow_media', JSON.stringify(media)); } catch {}
+    }
+
+    // 2. Delete folder from server & client
+    try {
+      await api(`/api/folders/${cur.id}`, { method: 'DELETE' });
+    } catch(e) {}
+
+    folders = folders.filter(f => String(f.id) !== String(cur.id));
+    try { localStorage.setItem('postflow_folders', JSON.stringify(folders)); } catch {}
+
+    if (String(folder) === String(folderId)) {
+      folder = null;
+    }
+    draw();
+    toast(`Folder "${cur.name}" aur iski tamam videos delete ho gayin!`);
+  }
+
+  // Clear All Displayed Videos in 1 Click
+  $('clearAllBtn').onclick = async () => {
+    const q = $('q').value.trim().toLowerCase();
+    const currentList = media.filter(m => {
+      if (folder !== null) {
+        const mFolder = getItemFolderId(m);
+        if (mFolder !== String(folder)) return false;
+      }
+      if (q && !m.name.toLowerCase().includes(q)) return false;
+      return true;
+    });
+
+    if (!currentList.length) return;
+
+    const targetLabel = folder !== null ? 'is folder ki' : 'All media ki';
+    if (!confirm(`Kya aap waqai ${targetLabel} tamam ${currentList.length} videos ko ek sath delete karna chahte hain?`)) return;
+
+    toast(`Deleting ${currentList.length} video(s)...`);
+    for (const item of currentList) {
+      try { await api(`/api/media/${item.id}`, { method: 'DELETE' }); } catch(e) {}
+      await removeStoredBlob(item.name);
+    }
+
+    const idsToDelete = new Set(currentList.map(m => String(m.id)));
+    media = media.filter(m => !idsToDelete.has(String(m.id)));
+    try { localStorage.setItem('postflow_media', JSON.stringify(media)); } catch {}
+
+    draw();
+    toast(`✅ Tamam ${currentList.length} videos delete ho chuki hain!`);
+  };
+
+  // Click on Chips to switch active folder OR delete folder
+  $('chips').onclick = e => {
+    const delBtn = e.target.closest('.chip-del');
+    if (delBtn) {
+      e.stopPropagation();
+      const fId = delBtn.dataset.delF;
+      performDeleteFolder(fId);
+      return;
+    }
+
+    const clickBtn = e.target.closest('.chip-click, .chip-all'); 
+    if (!clickBtn) return;
+    folder = clickBtn.dataset.f !== '' ? clickBtn.dataset.f : null;
+    draw();
+  };
+
+  $('q').oninput = draw;
+
+  // Create New Folder
+  $('newFolder').onclick = async () => {
+    const name = prompt('Folder name (e.g. TikTokCreator1):');
+    if (!name || !name.trim()) return;
+    const clean = name.trim();
+    try {
+      const created = await api('/api/folders', { method: 'POST', body: { name: clean } });
+      await loadFoldersOnly();
+      const newId = created?.id || created?.folder?.id || ('f-' + Date.now());
+      folder = newId;
+      draw();
+      toast(`Folder "${clean}" created.`);
+    } catch(e) {
+      const newF = { id: 'f-' + Date.now(), name: clean, videos: 0, images: 0 };
+      folders.push(newF);
+      try { localStorage.setItem('postflow_folders', JSON.stringify(folders)); } catch {}
+      folder = newF.id;
+      draw();
+      toast(`Folder "${clean}" created.`);
+    }
+  };
+
+  // Prominent Delete Current Folder Button
+  $('delFolder').onclick = () => {
+    if (folder !== null) {
+      performDeleteFolder(folder);
+    }
+  };
+
+  // Automatically find or create a folder with the given name
+  async function ensureFolderExists(folderName) {
+    if (!folderName || !folderName.trim()) return folder;
+    const cleanName = folderName.trim();
+    
+    let match = folders.find(f => f.name.toLowerCase() === cleanName.toLowerCase());
+    if (match) return match.id;
+
+    try {
+      const created = await api('/api/folders', { method: 'POST', body: { name: cleanName } });
+      const createdId = created?.id || created?.folder?.id || created?.folder_id;
+      await loadFoldersOnly();
+      const refreshed = folders.find(f => f.name.toLowerCase() === cleanName.toLowerCase());
+      return refreshed ? refreshed.id : (createdId || ('f-' + Date.now()));
+    } catch (e) {
+      const localFolder = { id: 'f-' + Date.now(), name: cleanName, videos: 0, images: 0 };
+      folders.push(localFolder);
+      try { localStorage.setItem('postflow_folders', JSON.stringify(folders)); } catch {}
+      return localFolder.id;
+    }
+  }
+
+  // BULLETPROOF MULTI-FILE & FOLDER UPLOADER WITH LOCAL PLAY SUPPORT
+  function upload(files, targetFolderId, targetFolderName = '') {
+    const list = Array.from(files).filter(f => isMediaFile(f.name));
+    if (!list.length) {
+      toast('No supported video or image files to upload.');
+      return;
+    }
+
+    let i = 0, active = 0, done = 0;
+    const destFolder = targetFolderId !== undefined ? targetFolderId : folder;
+    
+    const summaryRow = document.createElement('div');
+    summaryRow.className = 'up';
+    summaryRow.style.background = '#eff6ff';
+    summaryRow.style.borderColor = '#bfdbfe';
+    summaryRow.innerHTML = `
+      <span style="font-weight:700;color:#1e40af">
+        📁 Uploading ${list.length} file(s)${targetFolderName ? ' into folder "' + esc(targetFolderName) + '"' : ''}...
+      </span>
+      <div class="bar"><div style="width:0%;background:#1877f2"></div></div>
+      <span class="pc" style="color:#1e40af">0/${list.length}</span>
+    `;
+    $('ups').prepend(summaryRow);
+
+    const summaryBar = summaryRow.querySelector('.bar>div');
+    const summaryPc = summaryRow.querySelector('.pc');
+
+    const next = () => {
+      while (active < 3 && i < list.length) {
+        one(list[i++]);
+      }
+    };
+
+    async function one(file) {
+      active++;
+      
+      // Store blob locally in memory & IndexedDB so it plays instantly!
+      const objectUrl = URL.createObjectURL(file);
+      memoryBlobUrls.set(file.name, objectUrl);
+      await storeBlob(file.name, file);
+
+      const row = document.createElement('div');
+      row.className = 'up';
+      row.innerHTML = `
+        <span class="nm" title="${esc(file.name)}">📄 ${esc(file.name)}</span>
+        <div class="bar"><div></div></div>
+        <span class="pc">0%</span>
+      `;
+      $('ups').appendChild(row);
+
+      const bar = row.querySelector('.bar>div');
+      const pc = row.querySelector('.pc');
+
+      const finalizeItem = (ok, savedItem = null) => {
+        active--;
+        done++;
+
+        const overallPct = Math.round((done / list.length) * 100);
+        summaryBar.style.width = overallPct + '%';
+        summaryPc.textContent = `${done}/${list.length}`;
+
+        setTimeout(() => row.remove(), ok ? 1800 : 5000);
+
+        if (savedItem) {
+          savedItem.url = objectUrl;
+          media.unshift(savedItem);
+          try {
+            localStorage.setItem('postflow_media', JSON.stringify(media));
+          } catch {}
+          draw();
+        }
+
+        if (done >= list.length) {
+          setTimeout(() => {
+            summaryRow.remove();
+            toast(`✅ All ${list.length} file(s) ready! Click any video to play.`);
+            load(destFolder);
+          }, 1500);
+        }
+        next();
+      };
+
+      const x = new XMLHttpRequest();
+      x.open('POST', '/api/media');
+      x.setRequestHeader('X-PostFlow', '1');
+      x.setRequestHeader('X-Filename', encodeURIComponent(file.name));
+      if (destFolder) {
+        x.setRequestHeader('X-Folder', encodeURIComponent(String(destFolder)));
+      }
+
+      x.upload.onprogress = e => {
+        if (e.lengthComputable) {
+          const p = Math.round(e.loaded / e.total * 100);
+          bar.style.width = p + '%';
+          pc.textContent = p + '%';
+        }
+      };
+
+      const cleanCaptionText = extractCleanCaption(file.name);
+
+      const fd = new FormData();
+      fd.append('file', file, file.name);
+      fd.append('media', file, file.name);
+      fd.append('caption', cleanCaptionText);
+      fd.append('title', cleanCaptionText);
+      if (destFolder) {
+        fd.append('folderId', String(destFolder));
+        fd.append('folder', String(destFolder));
+      }
+
+      x.onload = () => {
+        let item = null;
+        if (x.status >= 200 && x.status < 300) {
+          try {
+            const d = JSON.parse(x.responseText);
+            item = d.item || d.media || d;
+          } catch(e) {}
+        }
+
+        if (!item || !item.id) {
+          item = {
+            id: 'm-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+            name: file.name,
+            caption: cleanCaptionText,
+            type: /\.(mp4|mov|m4v|webm|mkv|avi)$/i.test(file.name) ? 'video' : 'image',
+            size: file.size,
+            folderId: destFolder,
+            folder_id: destFolder,
+            url: objectUrl,
+            createdAt: new Date().toISOString()
+          };
+        } else {
+          item.url = objectUrl;
+          item.caption = cleanCaptionText;
+        }
+        finalizeItem(true, item);
+      };
+
+      x.onerror = () => {
+        const localRec = {
+          id: 'm-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+          name: file.name,
+          caption: cleanCaptionText,
+          type: /\.(mp4|mov|m4v|webm|mkv|avi)$/i.test(file.name) ? 'video' : 'image',
+          size: file.size,
+          folderId: destFolder,
+          folder_id: destFolder,
+          url: objectUrl,
+          createdAt: new Date().toISOString()
+        };
+        finalizeItem(true, localRec);
+      };
+
+      x.send(fd);
+    }
+
+    next();
+  }
+
+  // Recursive directory reader for Chrome drag-and-drop
+  async function readEntryRecursive(entry) {
+    let files = [];
+    if (entry.isFile) {
+      const file = await new Promise(res => entry.file(res, () => res(null)));
+      if (file) files.push(file);
+    } else if (entry.isDirectory) {
+      const reader = entry.createReader();
+      const readBatch = () => new Promise((resolve) => {
+        reader.readEntries(async (entries) => {
+          if (!entries.length) {
+            resolve([]);
+            return;
+          }
+          let subFiles = [];
+          for (const sub of entries) {
+            const f = await readEntryRecursive(sub);
+            subFiles.push(...f);
+          }
+          const nextBatch = await readBatch();
+          resolve(subFiles.concat(nextBatch));
+        }, () => resolve([]));
+      });
+      const nested = await readBatch();
+      files.push(...nested);
+    }
+    return files;
+  }
+
+  // Handle folder upload from <input type="file" webkitdirectory>
+  async function handleFolderUpload(fileList) {
+    const rawFiles = Array.from(fileList);
+    const mediaFiles = rawFiles.filter(f => isMediaFile(f.name));
+
+    if (!mediaFiles.length) {
+      toast('No video or image files found in the selected folder.');
+      return;
+    }
+
+    let folderName = 'Uploaded Folder';
+    for (let f of mediaFiles) {
+      const rel = f.webkitRelativePath || f.relativePath || '';
+      if (rel) {
+        const parts = rel.split('/');
+        if (parts.length > 1) {
+          folderName = parts[0];
+          break;
+        }
+      }
+    }
+
+    toast(`📁 Folder "${folderName}" detected! Uploading ${mediaFiles.length} files...`);
+    const targetId = await ensureFolderExists(folderName);
+    folder = targetId;
+    draw();
+
+    upload(mediaFiles, targetId, folderName);
+  }
+
+  // Universal Drop Handler
+  async function handleUniversalDataTransfer(dataTransfer) {
+    const items = dataTransfer.items;
+    if (items && items.length > 0 && typeof items[0].webkitGetAsEntry === 'function') {
+      let allFiles = [];
+      let rootFolderName = '';
+
+      for (let i = 0; i < items.length; i++) {
+        const entry = items[i].webkitGetAsEntry();
+        if (entry) {
+          if (entry.isDirectory && !rootFolderName) {
+            rootFolderName = entry.name;
+          }
+          const gathered = await readEntryRecursive(entry);
+          allFiles.push(...gathered);
+        }
+      }
+
+      const mediaOnly = allFiles.filter(f => isMediaFile(f.name));
+      if (!mediaOnly.length) {
+        toast('No video or picture files found in dropped items.');
+        return;
+      }
+
+      if (rootFolderName) {
+        toast(`📁 Dropped folder "${rootFolderName}". Uploading ${mediaOnly.length} files...`);
+        const targetId = await ensureFolderExists(rootFolderName);
+        folder = targetId;
+        draw();
+        upload(mediaOnly, targetId, rootFolderName);
+      } else {
+        upload(mediaOnly, folder);
+      }
+    } else {
+      const files = Array.from(dataTransfer.files).filter(f => isMediaFile(f.name));
+      if (files.length) {
+        upload(files, folder);
+      } else {
+        toast('No media files found to upload.');
+      }
+    }
+  }
+
+  const drop = $('drop');
+  const fileIn = $('fileIn');
+  const folderIn = $('folderIn');
+  const btnUploadFiles = $('btnUploadFiles');
+  const btnUploadFolder = $('btnUploadFolder');
+  const globalDropOverlay = $('globalDropOverlay');
+
+  btnUploadFiles.onclick = (e) => {
+    e.stopPropagation();
+    fileIn.click();
+  };
+
+  btnUploadFolder.onclick = (e) => {
+    e.stopPropagation();
+    folderIn.click();
+  };
+
+  drop.onclick = e => { 
+    if (e.target !== btnUploadFiles && e.target !== btnUploadFolder && !e.target.closest('.btn')) {
+      fileIn.click(); 
+    }
+  };
+
+  drop.onkeydown = e => { 
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      fileIn.click(); 
+    }
+  };
+
+  fileIn.onchange = e => { 
+    const files = Array.from(e.target.files).filter(f => isMediaFile(f.name));
+    if (files.length) {
+      upload(files, folder); 
+    } else {
+      toast('Please select valid MP4, MOV, JPG, PNG media files.');
+    }
+    e.target.value = ''; 
+  };
+
+  folderIn.onchange = async e => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      await handleFolderUpload(files);
+    }
+    e.target.value = '';
+  };
+
+  // Global window drag and drop handlers
+  let dragDepth = 0;
+
+  ['dragenter'].forEach(ev => {
+    window.addEventListener(ev, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragDepth++;
+      if (globalDropOverlay) globalDropOverlay.style.display = 'flex';
+    }, false);
+  });
+
+  ['dragover'].forEach(ev => {
+    window.addEventListener(ev, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = 'copy';
+      }
+      if (globalDropOverlay) globalDropOverlay.style.display = 'flex';
+    }, false);
+  });
+
+  ['dragleave'].forEach(ev => {
+    window.addEventListener(ev, e => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragDepth--;
+      if (dragDepth <= 0 || e.clientX <= 0 || e.clientY <= 0) {
+        dragDepth = 0;
+        if (globalDropOverlay) globalDropOverlay.style.display = 'none';
+      }
+    }, false);
+  });
+
+  window.addEventListener('drop', async e => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragDepth = 0;
+    if (globalDropOverlay) globalDropOverlay.style.display = 'none';
+    if (e.dataTransfer) {
+      await handleUniversalDataTransfer(e.dataTransfer);
+    }
+  }, false);
+
+  load();
+</script>
+</body>
+</html>

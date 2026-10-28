@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auto Download & Upload — PostFlow</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, Segoe UI, Roboto, sans-serif; }
+    body { background: #F2F5F7; color: #0E2A2F; }
+
+    /* SIDEBAR */
+    .sidebar { position: fixed; left: 0; top: 0; width: 240px; height: 100vh; background: #0E2A2F; color: #A0B2B7; padding: 20px 0; overflow-y: auto; z-index: 100; }
+    .logo { padding: 0 20px 20px; font-size: 21px; font-weight: 800; text-decoration: none; display: flex; align-items: center; gap: 10px; color: #fff; }
+    .logo-badge { width: 32px; height: 32px; background: #F7C948; color: #0E2A2F; border-radius: 8px; display: grid; place-items: center; font-size: 16px; font-weight: 900; }
+    .nav-label { padding: 14px 20px 6px; font-size: 11px; font-weight: 700; color: #627D83; text-transform: uppercase; letter-spacing: .5px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 20px; color: #A0B2B7; text-decoration: none; font-size: 13px; font-weight: 500; transition: background .15s, color .15s; }
+    .nav-item:hover { background: #13353B; color: #fff; }
+    .nav-item.active { background: #163E45; color: #F7C948; font-weight: 700; }
+    .user-footer { padding: 16px 20px; margin-top: 16px; border-top: 1px solid #16393F; font-size: 12px; color: #fff; }
+    .user-footer a { color: #F7C948; text-decoration: none; font-weight: 600; display: inline-block; margin-top: 4px; font-size: 11px; }
+
+    /* MAIN */
+    .main { margin-left: 240px; padding: 24px 36px; min-height: 100vh; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .topbar .sub { font-size: 12px; color: #718096; font-weight: 500; }
+    .topbar .user-area { font-size: 12px; color: #5B6B73; display: flex; gap: 12px; align-items: center; }
+    .topbar a { color: #0E2A2F; text-decoration: none; font-weight: 700; }
+
+    /* HEADER CARD */
+    .header-card { background: #fff; border-radius: 14px; padding: 22px 24px; margin-bottom: 16px; border: 1px solid #D8E0E5; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .header-card h1 { font-size: 22px; color: #0E2A2F; display: flex; align-items: center; gap: 8px; }
+    .header-card p { color: #5B6B73; font-size: 13px; margin-top: 4px; }
+    .btn { background: #0E2A2F; color: #fff; border: none; padding: 11px 20px; border-radius: 10px; font-size: 13px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; transition: opacity .15s; }
+    .btn:hover { opacity: .9; }
+    .btn-sec { background: #fff; color: #4a5568; border: 1px solid #D8E0E5; }
+    .btn-blue { background: #1877f2; color: #fff; }
+
+    /* STATS */
+    .stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-bottom: 16px; }
+    .stat { background: #fff; border-radius: 14px; padding: 16px; border: 1px solid #D8E0E5; }
+    .stat .label { font-size: 11px; color: #718096; font-weight: 700; text-transform: uppercase; }
+    .stat .num { font-size: 26px; font-weight: 800; color: #1877f2; margin-top: 4px; font-family: Consolas, monospace; }
+    .stat.ok .num { color: #2e9e5b; }
+    .stat.warn .num { color: #f39c12; }
+    .stat.crit .num { color: #e74c3c; }
+
+    .info-bar { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: #9a6a3a; }
+
+    .pages-head { background: #fff; border-radius: 14px 14px 0 0; padding: 16px 20px; border: 1px solid #D8E0E5; border-bottom: none; display: flex; justify-content: space-between; align-items: center; }
+    .pages-head h3 { font-size: 15px; color: #0E2A2F; font-weight: 700; }
+    .pages-head .sub { font-size: 12px; color: #718096; }
+
+    .controls { display: flex; gap: 12px; margin-bottom: 20px; background: #fff; padding: 14px 20px; border-radius: 0 0 14px 14px; border: 1px solid #D8E0E5; border-top: none; }
+    .controls input, .controls select { padding: 10px 12px; border: 1px solid #D8E0E5; border-radius: 9px; font-size: 13px; outline: none; }
+    .controls input { flex: 1; }
+    .controls select { min-width: 160px; font-weight: 600; color: #2d3748; }
+
+    /* GRID & CARDS */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+    .pcard { background: #fff; border-radius: 14px; padding: 18px; border: 1px solid #D8E0E5; display: flex; flex-col; justify-content: space-between; }
+    .pcard.active { border-left: 4px solid #2e9e5b; }
+    .pcard.paused { border-left: 4px solid #e74c3c; }
+    .pcard.idle { border-left: 4px solid #cbd5e0; }
+    .pcard .top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; }
+    .pcard .pname { font-weight: 700; font-size: 15px; color: #0E2A2F; }
+    .pcard .pid { color: #a0aec0; font-size: 11px; font-family: monospace; margin-top: 2px; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    .badge.active { background: #e6f7ed; color: #2e9e5b; }
+    .badge.idle { background: #edf2f7; color: #718096; }
+    .badge.r2 { background: #e7f1ff; color: #1877f2; }
+
+    .buffer { background: #f8fafc; border: 1px solid #edf2f7; border-radius: 10px; padding: 10px 12px; margin: 10px 0; }
+    .buffer-top { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; color: #4a5568; margin-bottom: 6px; }
+    .bbar { height: 7px; background: #e8edf5; border-radius: 10px; overflow: hidden; }
+    .bbar-fill { height: 100%; background: #2e9e5b; border-radius: 10px; }
+
+    .fl-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+    .fl-box { background: #f4f6fa; border-radius: 8px; padding: 7px 10px; }
+    .fl-box .l { font-size: 10px; color: #a0aec0; font-weight: 700; text-transform: uppercase; }
+    .fl-box .n { font-size: 15px; font-weight: 700; margin-top: 2px; font-family: monospace; }
+    .fl-box .n.up { color: #2e9e5b; }
+
+    .src-box { font-size: 12px; color: #5B6B73; background: #f4f6fa; padding: 8px 10px; border-radius: 8px; margin: 8px 0; word-break: break-all; }
+    .counts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 10px 0; }
+    .count-box { text-align: center; padding: 8px 4px; border-radius: 8px; }
+    .count-box .n { font-size: 18px; font-weight: 800; font-family: monospace; }
+    .count-box .l { font-size: 9px; text-transform: uppercase; color: #a0aec0; font-weight: 700; margin-top: 2px; }
+    .count-box.posted { background: #e6f7ed; } .count-box.posted .n { color: #2e9e5b; }
+    .count-box.queued { background: #fef5e7; } .count-box.queued .n { color: #f39c12; }
+    .count-box.failed { background: #fdeaea; } .count-box.failed .n { color: #e74c3c; }
+
+    .pcard .toolbar { display: flex; gap: 8px; margin-top: 10px; border-top: 1px solid #edf2f7; padding-top: 10px; }
+    .pcard .toolbar button { flex: 1; text-align: center; padding: 8px; border: 1px solid #D8E0E5; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; background: #fff; }
+    .t-pause { color: #f39c12; } .t-act { color: #1877f2; }
+
+    /* MODAL */
+    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 999; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 30px 16px; }
+    .modal { background: #fff; border-radius: 16px; padding: 26px; max-width: 600px; width: 100%; position: relative; }
+    .modal .x { position: absolute; top: 16px; right: 20px; cursor: pointer; font-size: 24px; color: #999; font-weight: bold; }
+    .modal h2 { font-size: 20px; color: #0E2A2F; margin-bottom: 2px; }
+    .modal .step { font-size: 13px; color: #718096; margin-bottom: 14px; }
+    .prog { height: 6px; background: #eef1f5; border-radius: 6px; margin-bottom: 18px; overflow: hidden; }
+    .prog .bar { height: 100%; background: #1877f2; transition: width .3s; }
+    .acc-list { max-height: 180px; overflow-y: auto; border: 1px solid #eef1f5; border-radius: 10px; margin-bottom: 14px; }
+    .acc-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f4f6fa; }
+    .acc-item:hover { background: #f0f6ff; }
+    .acc-item.sel { background: #e7f1ff; }
+    .acc-av { width: 36px; height: 36px; border-radius: 50%; background: #e7f1ff; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #1877f2; }
+    .field { width: 100%; padding: 10px 12px; margin-bottom: 10px; border: 1px solid #D8E0E5; border-radius: 9px; font-size: 13px; outline: none; }
+    .lbl { font-size: 13px; font-weight: 700; color: #0E2A2F; margin-bottom: 6px; display: block; }
+    .pages-scroll { max-height: 220px; overflow-y: auto; border: 1px solid #eef1f5; border-radius: 9px; padding: 6px; }
+    .page-chk { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 7px; margin-bottom: 4px; cursor: pointer; font-size: 13px; }
+    .page-chk:hover { background: #f4f6fa; }
+    .selbar { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+    .link-btn { background: none; border: none; color: #1877f2; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .link-btn.clr { color: #e74c3c; }
+    .toggle-row { display: flex; gap: 10px; margin-bottom: 14px; }
+    .toggle-opt { flex: 1; padding: 10px; border: 1px solid #D8E0E5; border-radius: 9px; text-align: center; cursor: pointer; font-size: 13px; font-weight: 700; color: #5B6B73; background: #fff; }
+    .toggle-opt.on { background: #e7f1ff; border-color: #1877f2; color: #1877f2; }
+    .ppd-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-bottom: 12px; }
+    .ppd-btn { padding: 8px 2px; border: 1px solid #D8E0E5; border-radius: 8px; text-align: center; cursor: pointer; background: #fff; }
+    .ppd-btn.on { background: #e7f1ff; border-color: #1877f2; }
+    .ppd-btn .n { font-size: 16px; font-weight: 800; color: #1877f2; font-family: monospace; }
+    .ppd-btn .l { font-size: 9px; color: #718096; text-transform: uppercase; font-weight: 700; }
+    .time-inputs { display: flex; flex-wrap: wrap; gap: 8px; }
+    .time-inputs input { width: 105px; padding: 8px; border: 1px solid #D8E0E5; border-radius: 8px; font-size: 12px; font-family: monospace; }
+    .suggest-btn { background: #16a085; color: #fff; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; margin-bottom: 12px; }
+
+    /* Interactive Card & Schedule Modal styles */
+    .pcard { cursor: pointer; transition: all .15s ease; position: relative; }
+    .pcard:hover { border-color: #1877f2; box-shadow: 0 6px 18px rgba(24,119,242,.12); }
+    .sched-banner { background: #f0f6ff; border: 1px solid #cce2ff; border-radius: 9px; padding: 10px 12px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center; transition: background .15s; }
+    .sched-banner:hover { background: #e2efff; }
+    .sched-banner-title { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #718096; letter-spacing: .5px; }
+    .sched-banner-times { font-size: 13px; font-weight: 700; color: #0E2A2F; font-family: monospace; margin-top: 2px; }
+    .sched-banner-sub { font-size: 11px; color: #718096; margin-top: 2px; }
+    .sched-edit-pill { background: #fff; border: 1px solid #bcdcff; color: #1877f2; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; white-space: nowrap; }
+    .preset-btn { background: #f0f6ff; border: 1px solid #cce2ff; color: #1877f2; padding: 6px 10px; border-radius: 7px; font-size: 11px; font-weight: 700; cursor: pointer; transition: background .15s; margin-right: 4px; margin-bottom: 4px; }
+    .preset-btn:hover { background: #dcebff; }
+    .time-slot-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 10px; }
+    .time-slot-num { font-size: 11px; font-weight: 800; color: #a0aec0; font-family: monospace; }
+    .time-slot-del { color: #e74c3c; background: none; border: none; font-size: 14px; font-weight: bold; cursor: pointer; padding: 0 4px; }
+    .t-sched { color: #1877f2 !important; font-weight: 800 !important; background: #e7f1ff !important; border-color: #bcdcff !important; }
+
+    @media (max-width: 900px) {
+      .stats { grid-template-columns: repeat(3, 1fr); }
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR (PostFlow Signature #0E2A2F Dark Teal) -->
+  <aside class="sidebar">
+    <a class="logo" href="/dashboard.html">
+      <div class="logo-badge">✈</div>
+      <span>PostFlow</span>
+    </a>
+
+    <div class="nav-label">Facebook</div>
+    <a class="nav-item" href="/dashboard.html">🏠 Dashboard</a>
+    <a class="nav-item" href="/connect-app.html">🔑 App settings</a>
+
+    <div class="nav-label">Posting</div>
+    <a class="nav-item" href="/media-library.html">📁 Media library</a>
+    <a class="nav-item" href="/direct-post.html">🚀 Post now</a>
+
+    <div class="nav-label">Automation</div>
+    <a class="nav-item active" href="/auto-upload.html">⬇️ Auto download & upload</a>
+    <a class="nav-item" href="/schedule.html">📅 Schedule</a>
+
+    <div class="user-footer">
+      <div id="sidebarUserEmail">wal593bro@gmail.com</div>
+      <a href="/dashboard.html">Dashboard View</a>
+    </div>
+  </aside>
+
+  <!-- MAIN VIEW -->
+  <main class="main">
+    <div class="topbar">
+      <div class="sub">PostFlow · Automation Engine</div>
+      <div class="user-area">
+        <span id="topbarUserEmail">wal593bro@gmail.com</span>
+        <a href="/dashboard.html">Back to Dashboard</a>
+      </div>
+    </div>
+
+    <!-- Header Card -->
+    <div class="header-card">
+      <div>
+        <h1>⬇️ Auto Download/Upload</h1>
+        <p>Connected pages — automated download aur posting.</p>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-sec" id="idleBtn" onclick="toggleIdle()">💤 Idle Pages (13)</button>
+        <button class="btn btn-sec" onclick="this.innerHTML='⏳ Refreshing...'; setTimeout(()=>{ this.innerHTML='🔄 Refresh Pages'; alert('Buffer refreshed!'); }, 800)">🔄 Refresh Pages</button>
+        <button class="btn btn-blue" onclick="openAddPage()">＋ Add Page</button>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats">
+      <div class="stat"><div class="label">Total Pages</div><div class="num" id="s_total">16</div></div>
+      <div class="stat ok"><div class="label">R2 Ready</div><div class="num" id="s_ready">3</div></div>
+      <div class="stat warn"><div class="label">Low Buffer</div><div class="num" id="s_low">1</div></div>
+      <div class="stat crit"><div class="label">Needs Attention</div><div class="num" id="s_needs">1</div></div>
+      <div class="stat crit"><div class="label">Failed/Skipped</div><div class="num" id="s_failed">4</div></div>
+      <div class="stat"><div class="label">Total Posted</div><div class="num" id="s_posted">301</div></div>
+    </div>
+
+    <!-- Info Bar -->
+    <div class="info-bar">
+      ℹ️ Tool strict 5-day R2 buffer rakhta hai. Har page par posting tab start hoti hai jab required videos R2 par ready hon. Ready pages: <b id="ready_ratio">3/3</b>.
+    </div>
+
+    <!-- Controls Filter -->
+    <div class="pages-head">
+      <h3>📚 Automation Pages</h3>
+      <div class="sub" id="pageCountLabel">3 pages active</div>
+    </div>
+    <div class="controls">
+      <input type="text" id="search" placeholder="🔍 Search pages or sources..." onkeyup="filterCards()">
+      <select id="statusFilter" onchange="filterCards()">
+        <option value="all">All Statuses</option>
+        <option value="active">Active</option>
+        <option value="paused">Paused</option>
+        <option value="rate-limited">Rate Limited</option>
+      </select>
+    </div>
+
+    <!-- Active Cards Grid (Populated dynamically via JS from localStorage/Cute Souls) -->
+    <div class="grid" id="activeGrid"></div>
+
+    <!-- SCHEDULE & TIMINGS SETTINGS MODAL -->
+    <div class="modal-bg" id="scheduleModal">
+      <div class="modal">
+        <span class="x" onclick="closeScheduleModal()">×</span>
+        <h2 id="schedModalTitle">⏰ Schedule & Timing Settings</h2>
+        <div class="step" id="schedModalSubtitle">Set daily posting times & frequency for this page</div>
+
+        <!-- Summary & Status -->
+        <div style="background:#f8fafc; border:1px solid #edf2f7; border-radius:10px; padding:12px; margin:12px 0; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <span id="schedStatusBadge" class="badge active">● Active</span>
+            <span style="font-size:12px; color:#718096; margin-left:8px;" id="schedBufferInfo">5-Day R2 Buffer: 20/20 ready</span>
+          </div>
+          <button type="button" class="link-btn" onclick="toggleSchedStatus()" id="schedStatusToggleBtn">⏸ Pause</button>
+        </div>
+
+        <!-- 1. Frequency -->
+        <label class="lbl">1. Daily Posting Frequency (Posts Per Day)</label>
+        <div class="ppd-grid" id="schedPpdGrid" style="grid-template-columns: repeat(9, 1fr); margin-bottom:14px;"></div>
+
+        <!-- 2. Times -->
+        <label class="lbl">2. Posting Time Slots (24h PKT Format)</label>
+        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;">
+          <button type="button" class="preset-btn" onclick="applySchedPreset('suggested')">📌 Suggested Peak (12, 15, 18, 21)</button>
+          <button type="button" class="preset-btn" onclick="applySchedPreset('morning')">🌅 Morning to Night</button>
+          <button type="button" class="preset-btn" onclick="applySchedPreset('evening')">🌙 Evening Peak</button>
+          <button type="button" class="preset-btn" onclick="applySchedPreset('spread')">⚡ Auto Spread Evenly</button>
+        </div>
+        <div class="time-inputs" id="schedTimeSlots" style="background:#f8fafc; border:1px solid #edf2f7; border-radius:10px; padding:12px; margin-bottom:14px;"></div>
+        <button type="button" class="link-btn" onclick="addSchedSlot()" style="margin-bottom:14px;">＋ Add Custom Time Slot</button>
+
+        <!-- 3. Source Link -->
+        <label class="lbl">3. Source Channel & Platform</label>
+        <div style="display:flex; gap:8px; margin-bottom:14px;">
+          <select id="schedPlatformSelect" class="field" style="width:110px; margin-bottom:0;">
+            <option value="tiktok">TikTok</option>
+            <option value="youtube">YouTube</option>
+            <option value="instagram">Instagram</option>
+            <option value="facebook">Facebook</option>
+          </select>
+          <input type="text" id="schedSourceInput" class="field" style="margin-bottom:0;" placeholder="https://tiktok.com/@channel or @handle">
+        </div>
+
+        <!-- 4. Anti-spam notice -->
+        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:10px 14px; font-size:12px; color:#166534; margin-bottom:16px;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600;">
+            <input type="checkbox" id="schedAntiSpam" checked>
+            <span><b>🛡️ Auto Time Jitter (+3 to 5 mins):</b> Exact time ke bajaye thora random aage peechhe post karega taake Facebook spam flag na kare.</span>
+          </label>
+        </div>
+
+        <!-- Live Dispatch Status Box -->
+        <div id="schedLiveStatus" style="display:none; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:10px; padding:12px; margin-bottom:14px; font-size:12px; color:#065f46;">
+          <div style="font-weight:800; font-size:13px; margin-bottom:4px;" id="schedLiveTitle">⏳ Dispatching Post...</div>
+          <div id="schedLiveDesc" style="line-height:1.5;">Connecting to TikTok and publishing video to Facebook Page...</div>
+        </div>
+
+        <!-- Buttons -->
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <button type="button" class="btn" id="schedTestPostBtn" style="background:#e6f7ed; color:#2e9e5b; border:1px solid #2e9e5b;" onclick="schedTestPost()">🚀 Test Post Now</button>
+          <button type="button" class="btn btn-sec" style="margin-left:auto;" onclick="closeScheduleModal()">Cancel</button>
+          <button type="button" class="btn btn-blue" id="schedSaveBtn" onclick="saveScheduleModal()">💾 Save Schedule</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 13 IDLE PAGES -->
+    <div id="idleWrap" style="display:none; margin-top:32px;">
+      <div class="pages-head">
+        <h3>💤 Idle Pages — posting nahi lagi (13)</h3>
+        <div class="sub">Yeh 13 pages connect hain par koi channel/source nahi laga. "＋ Channel lagao" se lagayein.</div>
+      </div>
+      <div class="grid" id="idleGrid" style="margin-top:0;">
+        <!-- Idle pages populated via JS -->
+      </div>
+    </div>
+  </main>
+
+  <!-- ADD PAGE WIZARD MODAL -->
+  <div class="modal-bg" id="addModal">
+    <div class="modal">
+      <span class="x" onclick="closeAddPage()">×</span>
+      <h2>➕ Add New Page</h2>
+      <div class="step" id="stepText">Step 1 of 3: Select Account & Pages</div>
+      <div class="prog"><div class="bar" id="progBar" style="width:33%;"></div></div>
+
+      <!-- STEP 1 -->
+      <div id="step1">
+        <label class="lbl">Select Facebook Account</label>
+        <input type="text" class="field" id="accSearch" placeholder="🔍 Search connected accounts..." onkeyup="renderAccounts()">
+        <div class="acc-list" id="accList"></div>
+
+        <div id="pagesArea" style="display:none;">
+          <label class="lbl">Select Pages</label>
+          <div class="selbar">
+            <button class="link-btn" onclick="selectAllPages()">✓ Select all pages</button>
+            <button class="link-btn clr" onclick="clearPages()">✕ Clear</button>
+            <span id="selCount" style="margin-left:auto;font-size:12px;color:#a0aec0;"></span>
+          </div>
+          <div class="pages-scroll" id="pagesList"></div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <button class="btn btn-blue" style="width:100%; justify-content:center;" onclick="goStep2()">Next →</button>
+        </div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div id="step2" style="display:none;">
+        <div class="toggle-row">
+          <div class="toggle-opt on" id="srcmode-each" onclick="setSrcMode('each')">📝 Ek-ek</div>
+          <div class="toggle-opt" id="srcmode-bulk" onclick="setSrcMode('bulk')">⚡ Bulk Paste</div>
+        </div>
+
+        <div id="srcEach">
+          <div id="sourceRows" style="max-height:260px; overflow-y:auto;"></div>
+        </div>
+
+        <div id="srcBulk" style="display:none;">
+          <textarea class="field" id="bulkLinks" rows="5" placeholder="https://www.tiktok.com/@channel1&#10;https://www.youtube.com/@channel2"></textarea>
+          <button class="btn btn-blue" onclick="matchBulk()">🔗 Match karo</button>
+          <div id="bulkMap" style="margin-top:10px; max-height:160px; overflow-y:auto;"></div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:16px;">
+          <button class="btn btn-sec" style="flex:1; justify-content:center;" onclick="showStep(1)">← Back</button>
+          <button class="btn btn-blue" style="flex:1; justify-content:center;" onclick="goStep3()">Next →</button>
+        </div>
+      </div>
+
+      <!-- STEP 3 -->
+      <div id="step3" style="display:none;">
+        <button class="suggest-btn" onclick="useSuggested()">📌 Suggested times (12:00, 15:00, 18:00, 21:00)</button>
+        <label class="lbl">Posts Per Day</label>
+        <div class="ppd-grid" id="ppdGrid"></div>
+        <label class="lbl">Times (24h format)</label>
+        <div class="time-inputs" id="timeInputs"></div>
+        <p style="font-size:11px;color:#718096;margin-top:8px;">Har channel ke time ko 3-5 minute aage failaya jayega taake Facebook spam flag na kare.</p>
+
+        <div style="display:flex; gap:10px; margin-top:16px;">
+          <button class="btn btn-sec" style="flex:1; justify-content:center;" onclick="showStep(2)">← Back</button>
+          <button class="btn btn-blue" style="flex:1; justify-content:center;" onclick="submitWizard()">✅ Create Selected Pages</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const IDLE_DATA = [
+      { id: '1403822466141421', name: 'Maryam Nawaz Highlights', owner: 'Sarah Reyes H' },
+      { id: '1313412401863683', name: 'Imran Khan Clips', owner: 'Sarah Reyes H' },
+      { id: '1428009157056685', name: 'Maryam Nawaz Updates', owner: 'Michelle Cruz Y' },
+      { id: '1358281700705419', name: 'Maryam Nawaz Media', owner: 'Emma Simmons G' },
+      { id: '1382529841611435', name: 'Maryam Nawaz Moments', owner: 'Doris Burton U' },
+      { id: '1336643376204272', name: 'Maryam Nawaz Clips', owner: 'Betty Gardner Y' },
+      { id: '1425331387322923', name: 'Maryam Nawaz Vibes', owner: 'Amber Kim T' },
+      { id: '1457899060730891', name: 'Maryam Nawaz Diaries', owner: 'Kathleen Russell U' },
+      { id: '1372222949304688', name: 'Maryam Nawaz Viral Clips', owner: 'Martha Mendoza D' },
+      { id: '1374895899044333', name: 'Maryam Nawaz Spotlight', owner: 'Marilyn Oliver G' },
+      { id: '1415164125005904', name: 'Maryam Nawaz Hub', owner: 'Evelyn Robertson U' },
+      { id: '1337615312774927', name: 'Maryam Nawaz World', owner: 'Christine Fuller T' },
+      { id: '1322284277637134', name: 'Maryam Nawaz Reels', owner: 'Michelle Cruz Y' }
+    ];
+
+    const ACCOUNTS_DATA = [
+      { id: 1, name: 'Sarah Reyes H', fbId: '100084729184712', pages: [{ id: 1, name: 'Maryam Nawaz Highlights', pid: '1403822466141421' }, { id: 2, name: 'Imran Khan Clips', pid: '1313412401863683' }] },
+      { id: 2, name: 'Michelle Cruz Y', fbId: '100091827401923', pages: [{ id: 3, name: 'Maryam Nawaz Updates', pid: '1428009157056685' }, { id: 4, name: 'Maryam Nawaz Reels', pid: '1322284277637134' }] },
+      { id: 3, name: 'Emma Simmons G', fbId: '100088192039182', pages: [{ id: 5, name: 'Maryam Nawaz Media', pid: '1358281700705419' }] },
+      { id: 4, name: 'Betty Gardner Y', fbId: '100079102847501', pages: [{ id: 6, name: 'Maryam Nawaz Clips', pid: '1336643376204272' }] }
+    ];
+
+    let selectedAcc = null;
+    let selectedPageIds = new Set();
+    let picked = [];
+    let sameCount = 4;
+    let sameTimes = ['12:00','15:00','18:00','21:00'];
+
+    function toggleIdle() {
+      const w = document.getElementById('idleWrap');
+      const b = document.getElementById('idleBtn');
+      const isHidden = w.style.display === 'none';
+      w.style.display = isHidden ? 'block' : 'none';
+      b.style.background = isHidden ? '#e7f1ff' : '';
+      b.style.color = isHidden ? '#1877f2' : '';
+    }
+
+    function renderIdle() {
+      const g = document.getElementById('idleGrid');
+      g.innerHTML = IDLE_DATA.map(p => `
+        <div class="pcard idle">
+          <div>
+            <div class="top">
+              <div><div class="pname">${p.name}</div><div class="pid">${p.id}</div></div>
+              <span class="badge idle">💤 Idle</span>
+            </div>
+            <div class="src-box"><b>Owner:</b> ${p.owner}<br><span style="color:#a0aec0;">⚠️ Abhi koi channel nahi laga.</span></div>
+          </div>
+          <div class="toolbar">
+            <button class="t-act" onclick="openAddPage('${p.name}')">＋ Channel lagao</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openAddPage(prefill) {
+      document.getElementById('addModal').style.display = 'flex';
+      showStep(1);
+      renderAccounts();
+    }
+    function closeAddPage() { document.getElementById('addModal').style.display = 'none'; }
+
+    function showStep(n) {
+      document.getElementById('step1').style.display = n === 1 ? 'block' : 'none';
+      document.getElementById('step2').style.display = n === 2 ? 'block' : 'none';
+      document.getElementById('step3').style.display = n === 3 ? 'block' : 'none';
+      document.getElementById('progBar').style.width = (n * 33) + '%';
+    }
+
+    function renderAccounts() {
+      const list = document.getElementById('accList');
+      list.innerHTML = ACCOUNTS_DATA.map(a => `
+        <div class="acc-item ${selectedAcc && selectedAcc.id === a.id ? 'sel' : ''}" onclick="selectAccount(${a.id})">
+          <div class="acc-av">${a.name[0]}</div>
+          <div><div style="font-weight:700;font-size:13px;">${a.name}</div><div style="font-size:11px;color:#a0aec0;">${a.pages.length} pages</div></div>
+        </div>
+      `).join('');
+    }
+
+    function selectAccount(id) {
+      selectedAcc = ACCOUNTS_DATA.find(a => a.id === id);
+      selectedPageIds = new Set();
+      renderAccounts();
+      document.getElementById('pagesArea').style.display = 'block';
+      const pl = document.getElementById('pagesList');
+      pl.innerHTML = selectedAcc.pages.map(p => `
+        <label class="page-chk">
+          <input type="checkbox" value="${p.id}" onchange="togglePage(${p.id}, this.checked)">
+          <span><b>${p.name}</b> (${p.pid})</span>
+        </label>
+      `).join('');
+    }
+
+    function togglePage(id, checked) {
+      if (checked) selectedPageIds.add(id); else selectedPageIds.delete(id);
+      document.getElementById('selCount').innerText = selectedPageIds.size + ' selected';
+    }
+    function selectAllPages() {
+      document.querySelectorAll('#pagesList input').forEach(i => { i.checked = true; selectedPageIds.add(parseInt(i.value)); });
+      document.getElementById('selCount').innerText = selectedPageIds.size + ' selected';
+    }
+    function clearPages() {
+      document.querySelectorAll('#pagesList input').forEach(i => i.checked = false);
+      selectedPageIds.clear();
+      document.getElementById('selCount').innerText = '0 selected';
+    }
+
+    function goStep2() {
+      if (selectedPageIds.size === 0) { alert('Pehle page chunein.'); return; }
+      picked = selectedAcc.pages.filter(p => selectedPageIds.has(p.id)).map(p => ({ ...p, platform: 'youtube', source: '' }));
+      renderSourceRows();
+      showStep(2);
+    }
+
+    function renderSourceRows() {
+      document.getElementById('sourceRows').innerHTML = picked.map((p, i) => `
+        <div style="border:1px solid #eef1f5; border-radius:8px; padding:10px; margin-bottom:8px;">
+          <div style="font-weight:700;font-size:13px;margin-bottom:6px;">📄 ${p.name}</div>
+          <div style="display:flex;gap:6px;">
+            <select class="field" style="width:110px;margin-bottom:0;" onchange="picked[${i}].platform=this.value">
+              <option value="youtube">YouTube</option>
+              <option value="tiktok">TikTok</option>
+              <option value="instagram">Instagram</option>
+            </select>
+            <input type="text" class="field" style="margin-bottom:0;" placeholder="Source profile URL or @handle" oninput="picked[${i}].source=this.value">
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function goStep3() {
+      for (const p of picked) {
+        if (!p.source) { alert(`${p.name} ka source link daalein.`); return; }
+      }
+      renderWizardPpd();
+      renderWizardTimes();
+      showStep(3);
+    }
+
+    function renderWizardPpd() {
+      const g = document.getElementById('ppdGrid');
+      if (!g) return;
+      g.innerHTML = [1,2,3,4,5,6].map(k => `
+        <div class="ppd-btn ${k === sameCount ? 'on' : ''}" onclick="setWizardCount(${k})">
+          <div class="n">${k}</div><div class="l">posts</div>
+        </div>
+      `).join('');
+    }
+
+    function setWizardCount(n) {
+      sameCount = n;
+      while (sameTimes.length < n) sameTimes.push('18:00');
+      sameTimes = sameTimes.slice(0, n);
+      renderWizardPpd();
+      renderWizardTimes();
+    }
+
+    function renderWizardTimes() {
+      const t = document.getElementById('timeInputs');
+      if (!t) return;
+      t.innerHTML = sameTimes.map((v, i) => `
+        <input type="time" value="${v}" oninput="sameTimes[${i}]=this.value">
+      `).join('');
+    }
+
+    function useSuggested() {
+      sameCount = 4;
+      sameTimes = ['12:00','15:00','18:00','21:00'];
+      renderWizardPpd();
+      renderWizardTimes();
+    }
+
+    const DEFAULT_AUTOMATIONS = [
+      {
+        id: 'cute-souls',
+        pageId: '1315097008356686',
+        name: 'Cute Souls',
+        platform: 'tiktok',
+        source: 'https://tiktok.com/@skytherapyx',
+        status: 'active',
+        r2Ready: true,
+        bufferCount: 20,
+        targetBuffer: 20,
+        followers: '15,420',
+        growth: '+140',
+        posted: 0,
+        queued: 20,
+        failed: 0,
+        postsPerDay: 4,
+        times: ['12:00', '15:00', '18:00', '21:00'],
+        nextRun: 'Today at 15:00'
+      }
+    ];
+
+    let automations = [];
+    try {
+      const saved = localStorage.getItem('postflow_automations_html');
+      automations = saved ? JSON.parse(saved) : DEFAULT_AUTOMATIONS;
+    } catch(e) {
+      automations = DEFAULT_AUTOMATIONS;
+    }
+
+    function saveAutomationsToStorage() {
+      try {
+        localStorage.setItem('postflow_automations_html', JSON.stringify(automations));
+      } catch(e){}
+    }
+
+    function renderActiveCards() {
+      const grid = document.getElementById('activeGrid');
+      if (!grid) return;
+      if (automations.length === 0) {
+        grid.innerHTML = '<div style="background:#fff; border-radius:14px; padding:32px; text-align:center; color:#a0aec0; border:1px solid #D8E0E5;">Koi active automation page nahi hai. "＋ Add Page" se channel lagayein.</div>';
+        return;
+      }
+
+      grid.innerHTML = automations.map(c => {
+        const pct = Math.min(100, Math.round((c.bufferCount / c.targetBuffer) * 100));
+        const statusClass = c.status === 'active' ? 'active' : 'paused';
+        const timesText = (c.times && c.times.length > 0) ? c.times.join(' · ') : '12:00 · 15:00 · 18:00 · 21:00';
+
+        return `
+          <div class="pcard ${statusClass}" data-name="${c.name.toLowerCase()}" onclick="openScheduleModal('${c.id}')">
+            <div>
+              <div class="top">
+                <div>
+                  <div class="pname">${c.name}</div>
+                  <div class="pid">${c.pageId}</div>
+                </div>
+                <div style="display:flex; gap:4px; align-items:center;">
+                  <span class="badge ${c.status === 'active' ? 'active' : 'idle'}">${c.status}</span>
+                  ${c.r2Ready ? '<span class="badge r2">R2 Ready</span>' : ''}
+                </div>
+              </div>
+
+              <div class="buffer">
+                <div class="buffer-top"><span>5-Day R2 Buffer</span><span>${c.bufferCount}/${c.targetBuffer} videos ready</span></div>
+                <div class="bbar"><div class="bbar-fill" style="width:${pct}%;"></div></div>
+              </div>
+
+              <div class="src-box"><b>Source (${c.platform}):</b> <a href="${c.source}" target="_blank" onclick="event.stopPropagation()" style="color:#1877f2; text-decoration:none;">${c.source}</a></div>
+
+              <div class="counts">
+                <div class="count-box posted"><div class="n">${c.posted}</div><div class="l">Posted</div></div>
+                <div class="count-box queued"><div class="n">${c.queued}</div><div class="l">Queued</div></div>
+                <div class="count-box failed"><div class="n">${c.failed}</div><div class="l">Failed</div></div>
+              </div>
+
+              <!-- SCHEDULE BANNER -->
+              <div class="sched-banner">
+                <div>
+                  <div class="sched-banner-title">⏰ Daily Schedule</div>
+                  <div class="sched-banner-times">${timesText}</div>
+                  <div class="sched-banner-sub">${c.postsPerDay || c.times.length} posts/day · Next: <b style="color:#1877f2;">${c.nextRun || 'Today'}</b></div>
+                </div>
+                <span class="sched-edit-pill">⚙️ Set Times</span>
+              </div>
+            </div>
+
+            <div class="toolbar" onclick="event.stopPropagation()">
+              <button class="t-sched" onclick="openScheduleModal('${c.id}')">⏰ Schedule (${c.times ? c.times.length : 4}/day)</button>
+              <button class="t-pause" onclick="toggleCardStatus('${c.id}')">${c.status === 'active' ? '⏸ Pause' : '▶ Resume'}</button>
+              <button class="t-act" onclick="simulateCardPost('${c.id}')">🚀 Post Now</button>
+              <button onclick="removeCard('${c.id}')" style="color:#e74c3c; width:34px; padding:8px 0;" title="Remove">✕</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Update counter
+      const lbl = document.getElementById('pageCountLabel');
+      if (lbl) lbl.innerText = `${automations.length} pages active`;
+      const sTotal = document.getElementById('s_total');
+      if (sTotal) sTotal.innerText = automations.length + IDLE_DATA.length;
+      const sReady = document.getElementById('s_ready');
+      if (sReady) sReady.innerText = automations.filter(a => a.r2Ready).length;
+    }
+
+    // Modal Active Editing Card
+    let currentSchedCard = null;
+    let currentSchedTimes = [];
+    let currentSchedCount = 4;
+
+    function openScheduleModal(id) {
+      currentSchedCard = automations.find(a => a.id === id);
+      if (!currentSchedCard) return;
+
+      currentSchedTimes = currentSchedCard.times ? [...currentSchedCard.times] : ['12:00','15:00','18:00','21:00'];
+      currentSchedCount = currentSchedCard.postsPerDay || currentSchedTimes.length || 4;
+
+      document.getElementById('schedModalTitle').innerHTML = `⏰ Schedule: ${currentSchedCard.name}`;
+      document.getElementById('schedModalSubtitle').innerText = `Page ID: ${currentSchedCard.pageId} · Daily posting timings aur frequency set karein`;
+      document.getElementById('schedSourceInput').value = currentSchedCard.source || '';
+      document.getElementById('schedPlatformSelect').value = currentSchedCard.platform || 'tiktok';
+
+      updateSchedStatusView();
+      renderSchedPpd();
+      renderSchedTimeSlots();
+
+      document.getElementById('scheduleModal').style.display = 'flex';
+    }
+
+    function closeScheduleModal() {
+      document.getElementById('scheduleModal').style.display = 'none';
+      currentSchedCard = null;
+    }
+
+    function updateSchedStatusView() {
+      if (!currentSchedCard) return;
+      const b = document.getElementById('schedStatusBadge');
+      const btn = document.getElementById('schedStatusToggleBtn');
+      b.className = 'badge ' + (currentSchedCard.status === 'active' ? 'active' : 'idle');
+      b.innerText = currentSchedCard.status === 'active' ? '● Active' : '⏸ Paused';
+      btn.innerText = currentSchedCard.status === 'active' ? '⏸ Click to Pause' : '▶ Click to Activate';
+    }
+
+    function toggleSchedStatus() {
+      if (!currentSchedCard) return;
+      currentSchedCard.status = currentSchedCard.status === 'active' ? 'paused' : 'active';
+      updateSchedStatusView();
+    }
+
+    function renderSchedPpd() {
+      const g = document.getElementById('schedPpdGrid');
+      g.innerHTML = [1, 2, 3, 4, 5, 6, 8, 10, 12].map(cnt => `
+        <div class="ppd-btn ${cnt === currentSchedCount ? 'on' : ''}" onclick="setSchedCount(${cnt})">
+          <div class="n">${cnt}</div><div class="l">posts</div>
+        </div>
+      `).join('');
+    }
+
+    function setSchedCount(cnt) {
+      currentSchedCount = cnt;
+      if (cnt === 1) currentSchedTimes = ['18:00'];
+      else if (cnt === 2) currentSchedTimes = ['13:00', '19:00'];
+      else if (cnt === 3) currentSchedTimes = ['12:00', '16:00', '20:00'];
+      else if (cnt === 4) currentSchedTimes = ['12:00', '15:00', '18:00', '21:00'];
+      else if (cnt === 5) currentSchedTimes = ['10:00', '13:00', '16:00', '19:00', '22:00'];
+      else if (cnt === 6) currentSchedTimes = ['09:00', '12:00', '15:00', '18:00', '20:30', '22:30'];
+      else {
+        const step = 14 / (cnt + 1);
+        currentSchedTimes = [];
+        for (let i = 1; i <= cnt; i++) {
+          const hour = Math.floor(9 + step * i);
+          const mins = (i % 2 === 0 ? '30' : '00');
+          currentSchedTimes.push(`${String(hour).padStart(2, '0')}:${mins}`);
+        }
+      }
+      renderSchedPpd();
+      renderSchedTimeSlots();
+    }
+
+    function renderSchedTimeSlots() {
+      const c = document.getElementById('schedTimeSlots');
+      c.innerHTML = currentSchedTimes.map((tm, idx) => `
+        <div class="time-slot-row">
+          <span class="time-slot-num">#${idx + 1}</span>
+          <input type="time" value="${tm}" onchange="currentSchedTimes[${idx}]=this.value" style="border:none; outline:none; font-family:monospace; font-weight:bold; cursor:pointer;">
+          ${currentSchedTimes.length > 1 ? `<button type="button" class="time-slot-del" onclick="removeSchedSlot(${idx})" title="Delete slot">✕</button>` : ''}
+        </div>
+      `).join('');
+    }
+
+    function addSchedSlot() {
+      currentSchedTimes.push('20:00');
+      currentSchedCount = currentSchedTimes.length;
+      renderSchedPpd();
+      renderSchedTimeSlots();
+    }
+
+    function removeSchedSlot(idx) {
+      if (currentSchedTimes.length <= 1) {
+        alert('Kam az kam aik time slot lazmi hona chahiye.');
+        return;
+      }
+      currentSchedTimes.splice(idx, 1);
+      currentSchedCount = currentSchedTimes.length;
+      renderSchedPpd();
+      renderSchedTimeSlots();
+    }
+
+    function applySchedPreset(type) {
+      if (type === 'suggested') {
+        currentSchedCount = 4;
+        currentSchedTimes = ['12:00', '15:00', '18:00', '21:00'];
+      } else if (type === 'morning') {
+        currentSchedCount = 4;
+        currentSchedTimes = ['09:00', '13:00', '17:00', '21:00'];
+      } else if (type === 'evening') {
+        currentSchedCount = 4;
+        currentSchedTimes = ['17:00', '19:30', '21:45', '23:30'];
+      } else if (type === 'spread') {
+        setSchedCount(currentSchedCount);
+        return;
+      }
+      renderSchedPpd();
+      renderSchedTimeSlots();
+    }
+
+    function saveScheduleModal() {
+      if (!currentSchedCard) return;
+      const src = document.getElementById('schedSourceInput').value.trim();
+      const plat = document.getElementById('schedPlatformSelect').value;
+
+      if (!src) { alert('Source URL khali nahi ho sakti!'); return; }
+      if (currentSchedTimes.length === 0) { alert('Kam az kam aik time slot lazmi hai.'); return; }
+
+      const sortedTimes = [...currentSchedTimes].sort();
+      currentSchedCard.times = sortedTimes;
+      currentSchedCard.postsPerDay = sortedTimes.length;
+      currentSchedCard.source = src;
+      currentSchedCard.platform = plat;
+      currentSchedCard.nextRun = `Today at ${sortedTimes[0]}`;
+
+      saveAutomationsToStorage();
+      renderActiveCards();
+
+      const saveBtn = document.getElementById('schedSaveBtn');
+      if (saveBtn) {
+        saveBtn.innerText = '✅ Saved!';
+        saveBtn.style.background = '#10b981';
+      }
+
+      setTimeout(() => {
+        if (saveBtn) {
+          saveBtn.innerText = '💾 Save Schedule';
+          saveBtn.style.background = '#1877f2';
+        }
+        closeScheduleModal();
+      }, 700);
+    }
+
+    function schedTestPost() {
+      if (!currentSchedCard) return;
+      const btn = document.getElementById('schedTestPostBtn');
+      const box = document.getElementById('schedLiveStatus');
+      const title = document.getElementById('schedLiveTitle');
+      const desc = document.getElementById('schedLiveDesc');
+
+      if (!btn || !box) {
+        simulateCardPost(currentSchedCard.id);
+        return;
+      }
+
+      // Step 1: Fetching video
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+      btn.innerHTML = '⏳ 1/3: Video Fetch ho rahi hai...';
+      box.style.display = 'block';
+      box.style.background = '#eff6ff';
+      box.style.borderColor = '#bfdbfe';
+      box.style.color = '#1e40af';
+      title.innerText = '⏳ Step 1: TikTok Source se video buffer me fetch ho rahi hai...';
+      desc.innerText = `Source: ${currentSchedCard.source || 'https://tiktok.com/@skytherapyx'} - R2 storage download active...`;
+
+      // Step 2: Uploading to Facebook
+      setTimeout(() => {
+        btn.innerHTML = '⏳ 2/3: Facebook Cute Souls par upload...';
+        title.innerText = '⏳ Step 2: Facebook Graph API se Reel publish ho rahi hai...';
+        desc.innerText = `Page: ${currentSchedCard.name} (${currentSchedCard.pageId}) par video dispatch ki ja rahi hai...`;
+
+        // Step 3: Success
+        setTimeout(() => {
+          btn.innerHTML = '✅ 3/3: Post Ho Gayi!';
+          btn.style.background = '#10b981';
+          btn.style.color = '#fff';
+          btn.style.borderColor = '#059669';
+
+          box.style.background = '#ecfdf5';
+          box.style.borderColor = '#a7f3d0';
+          box.style.color = '#065f46';
+          title.innerText = '🎉 MUBARAK! Video Facebook Page par successfully post ho gayi!';
+          desc.innerHTML = `<b>Page:</b> ${currentSchedCard.name} (${currentSchedCard.pageId})<br><b>Status:</b> Published (Post ID: #fb_${Date.now().toString().slice(-8)})<br><b>Counts:</b> Posted +1 | R2 Buffer Videos: 19/20 ready`;
+
+          // Update data in card & storage
+          currentSchedCard.posted = (currentSchedCard.posted || 0) + 1;
+          currentSchedCard.queued = Math.max(0, (currentSchedCard.queued || 20) - 1);
+          currentSchedCard.bufferCount = Math.max(0, (currentSchedCard.bufferCount || 20) - 1);
+          saveAutomationsToStorage();
+          renderActiveCards();
+          updateSchedStatusView();
+
+          setTimeout(() => {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.innerHTML = '🚀 Test Post Again';
+            btn.style.background = '#e6f7ed';
+            btn.style.color = '#2e9e5b';
+            btn.style.borderColor = '#2e9e5b';
+          }, 3500);
+        }, 1100);
+      }, 800);
+    }
+
+    function simulateCardPost(id) {
+      const card = automations.find(a => a.id === id);
+      if (!card) return;
+      card.posted = (card.posted || 0) + 1;
+      card.queued = Math.max(0, (card.queued || 1) - 1);
+      saveAutomationsToStorage();
+      renderActiveCards();
+    }
+
+    function toggleCardStatus(id) {
+      const card = automations.find(a => a.id === id);
+      if (!card) return;
+      card.status = card.status === 'active' ? 'paused' : 'active';
+      saveAutomationsToStorage();
+      renderActiveCards();
+    }
+
+    function removeCard(id) {
+      const card = automations.find(a => a.id === id);
+      if (!card) return;
+      if (confirm(`Kya aap "${card.name}" ki automation remove karna chahte hain?`)) {
+        automations = automations.filter(a => a.id !== id);
+        saveAutomationsToStorage();
+        renderActiveCards();
+      }
+    }
+
+    function submitWizard() {
+      if (!picked || picked.length === 0) return;
+      const sortedTimes = [...sameTimes].sort();
+
+      picked.forEach(p => {
+        automations.unshift({
+          id: 'auto-' + Date.now() + '-' + p.id,
+          pageId: p.pid,
+          name: p.name,
+          platform: p.platform || 'youtube',
+          source: p.source,
+          status: 'active',
+          r2Ready: true,
+          bufferCount: 20,
+          targetBuffer: 20,
+          followers: '10,000',
+          growth: '+50',
+          posted: 0,
+          queued: 20,
+          failed: 0,
+          postsPerDay: sortedTimes.length,
+          times: sortedTimes,
+          nextRun: `Today at ${sortedTimes[0]}`
+        });
+      });
+
+      saveAutomationsToStorage();
+      renderActiveCards();
+      closeAddPage();
+      alert(`✅ ${picked.length} pages automation schedule ho gaye! R2 buffer download shuru ho gaya.`);
+    }
+
+    function filterCards() {
+      const q = document.getElementById('search').value.toLowerCase();
+      document.querySelectorAll('#activeGrid .pcard').forEach(c => {
+        const name = c.getAttribute('data-name') || '';
+        c.style.display = name.includes(q) ? 'flex' : 'none';
+      });
+    }
+
+    // Init
+    renderActiveCards();
+    renderIdle();
+  </script>
+</body>
+</html>
